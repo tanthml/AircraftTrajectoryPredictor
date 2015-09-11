@@ -9,6 +9,8 @@ Created on 29 decembre 2014
 import time
 import unittest
 
+from Home.aerocalc.airspeed import cas2tas, default_temp_units
+
 from Home.Environment.Atmosphere import  Atmosphere
 from Home.Environment.Earth import Earth
 
@@ -54,7 +56,17 @@ class Test_Vstall(unittest.TestCase):
                                         atmosphere = atmosphere,
                                         earth = earth)
             print 'airport field elevation= {0:.2f} meters'.format( airport.getFieldElevationAboveSeaLevelMeters())
-            print 'V stall CAS= {0:.2f} knots'.format(aircraft.computeStallSpeedCasKnots()) 
+            CAS = aircraft.computeStallSpeedCasKnots()
+            print 'V stall Calibrated AirSpeed= {0:.2f} knots'.format(CAS) 
+            TAS = cas2tas(cas = CAS , 
+                  altitude = airport.getFieldElevationAboveSeaLevelMeters(),
+                  temp = 'std',
+                  speed_units = 'kt',
+                  alt_units = 'm',
+                  temp_units=default_temp_units,
+                  )
+            print 'V stall True AirSpeed= {0:.2f} knots'.format(TAS) 
+
     
 
     #============================================
