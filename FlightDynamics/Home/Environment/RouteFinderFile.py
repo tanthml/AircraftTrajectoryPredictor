@@ -30,6 +30,7 @@ see route finder website
 
 '''
 import time
+from urllib.parse import urlencode
 from urllib.request import urlopen
 from html.parser import HTMLParser
 
@@ -87,8 +88,8 @@ class RouteFinder(object):
         response = urlopen(url=self.base_url)
         the_html_page = response.read()
         #print the_html_page
-        htmlParser = HtmlParser(searchedTag = 'form')
-        htmlParser.feed(the_html_page)
+        htmlParser = HtmlParser(searchedTag='form')
+        htmlParser.feed(the_html_page.decode("utf-8"))
         return htmlParser.searchedTagFound()
     
     
@@ -96,9 +97,9 @@ class RouteFinder(object):
         ''' query the route finder website and retrieve a route '''
         self.Adep = Adep
         self.Ades = Ades
-        assert isinstance(RFL, (str,unicode)) and (len(RFL)>0) and str(RFL).startswith('FL')
-        assert not(Adep is None) and isinstance(Adep,(str,unicode)) and (len(Adep)>0)
-        assert not(Ades is None) and isinstance(Ades,(str,unicode)) and (len(Ades)>0)
+        assert isinstance(RFL, (str,str)) and (len(RFL)>0) and str(RFL).startswith('FL')
+        assert not(Adep is None) and isinstance(Adep,(str,str)) and (len(Adep)>0)
+        assert not(Ades is None) and isinstance(Ades,(str,str)) and (len(Ades)>0)
         values = { 'id1': Adep,
                     'ic1':'',
                     'id2': Ades,
@@ -113,9 +114,10 @@ class RouteFinder(object):
                     'rnav':'Y',
                     'nats':'',
                     'k':235644007           } 
-        data = urllib.urlencode(values)
+        # data = urllib.urlencode(values)
+        data = urlencode(values)
         ''' use the script to retrieve a route '''
-        response = urllib2.urlopen(url = self.script_url, data= data)
+        response = urlopen(url=self.script_url, data=bytes(data))
         
         #print 'encoding = {0}'.format(response.headers.getparam('charset'))
         encoding = response.headers.getparam('charset')
@@ -142,19 +144,19 @@ class RouteFinder(object):
             index = 0
             fixDict = {}
             for item in line.split(' '):
-                item = unicode(item).strip()
+                item = str(item).strip()
                 if len(item)==0: continue
                 if index == 0 :
                     #print 'fix= {0}'.format(item)
                     fixDict['Name'] = item
                     index += 1
-                if len(item)> 0 and (u'\xb0' in unicode(item).strip()):
+                if len(item)> 0 and (u'\xb0' in str(item).strip()):
                     if 'N' in item or 'S' in item :
                         #print 'latitude= {0}'.format( unicode(unicode(item).strip()))
                         fixDict['latitude'] = item
                     if 'W' in item or 'E' in item:
                         #print 'longitude= {0}'.format( unicode(unicode(item).strip()))
-                        fixDict['longitude'] = unicode(item).strip()
+                        fixDict['longitude'] = str(item).strip()
                     ''' increment only if item len > 0 ''' 
                     index += 1
             if len(fixDict) > 0:
@@ -191,6 +193,5 @@ if __name__ == '__main__':
             print(routeList)
              
             routeFinder.insertWayPointsInDatabase(wayPointsDb)
-
     
     print("=========== Route Finder start  =========== " + time.strftime("%c"))

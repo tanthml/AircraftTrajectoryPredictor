@@ -35,48 +35,51 @@ Meter2NauticalMiles = 0.000539956803 # One Meter = 0.0005 nautical miles
 NauticalMiles2Meter = 1852
 Knots2MetersPerSecond = 0.514444444
 
-class Test_Route(unittest.TestCase):
 
+class TestRouteA320CharlesDeGaulleLisbonne(unittest.TestCase):
 
-    def test_route(self):
+    def test_route_a320_charles_de_gaulle_lisbonne(self):
 
-        print ( "=========== Flight Plan start  =========== "  )
+        print("=========== Flight Plan start  =========== ")
 
         strRoute = 'ADEP/LFPG/26R-LAIGLE-ROLEN-PEPON-KURIS-TERPO-ERIGA-INBAB-ATLEN-DEVAR-ASTURIAS-KUVAN-BISMU-BARKO-FATIMA-ADES/LPPT/03'
-        flightPath = FlightPath(route = strRoute,
-                                aircraftICAOcode = 'A320',
-                                RequestedFlightLevel = 330,
-                                cruiseMach = 0.82,
-                                takeOffMassKilograms = 68000.0,
-                                windSpeedMetersPerSecond=25* Knots2MetersPerSecond,
-                                windDirectionDegrees=25
+
+        flightPath = FlightPath(
+            route=strRoute,
+            aircraftICAOcode='A320',
+            RequestedFlightLevel=330,
+            cruiseMach=0.82,
+            takeOffMassKilograms=68000.0,
+            windSpeedMetersPerSecond=25*Knots2MetersPerSecond,
+            windDirectionDegrees=25
         )
 
-        # # If we want to generate the whole flight using the old code, use the .computeFlight function
-        flightPath.computeFlight(deltaTimeSeconds = 1.0)
+        # If we want to generate the whole flight using the old code, use the .computeFlight function
+        flightPath.computeFlight(deltaTimeSeconds=1.0)
         flightPath.createFlightOutputFiles()
 
-
         # If we want to fly through the flight and generate the configuration for later fly, use .fly()
-        flyAndGenerateConfig = FlightPath(route = strRoute,
-                                          aircraftICAOcode = 'A320',
-                                          RequestedFlightLevel = 330,
-                                          cruiseMach = 0.82,
-                                          takeOffMassKilograms = 68000.0,
-                                          windSpeedMetersPerSecond=25* Knots2MetersPerSecond,
-                                          windDirectionDegrees=25)
+        flyAndGenerateConfig = FlightPath(
+            route=strRoute,
+            aircraftICAOcode='A320',
+            RequestedFlightLevel=330,
+            cruiseMach=0.82,
+            takeOffMassKilograms=68000.0,
+            windSpeedMetersPerSecond=25*Knots2MetersPerSecond,
+            windDirectionDegrees=25
+        )
         flyAndGenerateConfig.fly()
-
 
         # If we want to simulate the fly based on previous configuration, use .simulateFly
         strRoute = 'ADEP/LFPG/26R-LAIGLE-ROLEN-PEPON-KURIS-TERPO-ERIGA-INBAB-ATLEN-DEVAR-ASTURIAS-KUVAN-BISMU-BARKO-ADES/LPPT/03'
-        updateFlightPath = FlightPath(route = strRoute,
-                                     aircraftICAOcode = 'A320',
-                                     RequestedFlightLevel = 330,
-                                     cruiseMach = 0.82,
-                                     takeOffMassKilograms = 68000.0,
-                                     windSpeedMetersPerSecond=25* Knots2MetersPerSecond,
-                                     windDirectionDegrees=25
+        updateFlightPath = FlightPath(
+            route=strRoute,
+            aircraftICAOcode='A320',
+            RequestedFlightLevel=330,
+            cruiseMach=0.82,
+            takeOffMassKilograms=68000.0,
+            windSpeedMetersPerSecond=25*Knots2MetersPerSecond,
+            windDirectionDegrees=25
         )
 
         # fly from index 4 for the new route

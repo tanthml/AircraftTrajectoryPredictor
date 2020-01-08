@@ -27,20 +27,16 @@ Created on 25 avril. 2015
 import time
 import unittest
 
-
 from Home.Environment.AirportDatabaseFile import AirportsDatabase
 from Home.Environment.RunWaysDatabaseFile import RunWayDataBase
 from Home.Environment.WayPointsDatabaseFile import WayPointsDatabase
-
 from Home.Environment.RouteFinderFile import RouteFinder
-
 from Home.Guidance.FlightPathFile import FlightPath
-            
-class Test_Route(unittest.TestCase):
 
 
-    def test_route(self):
-    
+class TestAirportsDirectRoutes(unittest.TestCase):
+
+    def test_airport_direct_routes(self):
 #     import sys
 #     temp = sys.stdout #store original stdout object for later
 #     sys.stdout = open('log.txt','w') #redirect all prints to this log file
@@ -49,70 +45,82 @@ class Test_Route(unittest.TestCase):
         assert wayPointsDb.read()
             
         t0 = time.process_time()
-        print (' ========== Airports Direct Route testing ======= ')
+        print('========== Airports Direct Route testing ======= ')
         
         airportsDb = AirportsDatabase()
-        assert  airportsDb.read()
+        assert airportsDb.read()
         t1 = time.process_time()
-        print (' time to read airports database= {0:.2f} seconds'.format(t1-t0))
+        print('time to read airports database= {0:.2f} seconds'.format(t1-t0))
         
         t2 = time.process_time()
         runwaysDb = RunWayDataBase()
         assert runwaysDb.read()
-        print (' time to read run-way database= {0:.2f} seconds'.format(t2-t1))
+        print('time to read run-way database= {0:.2f} seconds'.format(t2-t1))
         
-        print (' ========== Airports Direct Route testing ======= ')
+        print('========== Airports Direct Route testing =======')
         departureCountry = 'Japan'
         departureCountry = 'United Kingdom'
         departureCountry = 'France'
         departureCountry = 'United States'
+        # departureCountry = 'Singapore'
         arrivalCountry = 'Canada'
         arrivalCountry = 'France' 
-        arrivalCountry = 'United States' 
-        for departureAirport in  airportsDb.getAirportsFromCountry(Country = departureCountry):
+        arrivalCountry = 'United States'
+        # arrivalCountry = 'Vietnam'
+
+        for departureAirport in airportsDb.getAirportsFromCountry(
+                Country=departureCountry
+        ):
             departureAirportICAOcode = departureAirport.getICAOcode()
-            
             departureRunwayName = ''
             departureRunwayFound = False
             
-            for runwayName in runwaysDb.findAirportRunWays(airportICAOcode = departureAirportICAOcode, 
-                                                           runwayLengthFeet = 11000.0):
+            for runwayName in runwaysDb.findAirportRunWays(
+                    airportICAOcode=departureAirportICAOcode,
+                    runwayLengthFeet=11000.0
+            ):
                 if not(runwaysDb.getFilteredRunWays(
-                                                    airportICAOcode = departureAirportICAOcode, 
-                                                    runwayName = runwayName) is None):
-                    departureRunwayName  = runwayName
+                        airportICAOcode=departureAirportICAOcode,
+                        runwayName=runwayName) is None
+                ):
+                    departureRunwayName = runwayName
                     departureRunwayFound = True
                     break
                 
             if departureRunwayFound:
                 
-                for arrivalAirport in airportsDb.getAirportsFromCountry(Country = arrivalCountry):
+                for arrivalAirport in airportsDb.getAirportsFromCountry(
+                        Country=arrivalCountry
+                ):
                     
                     arrivalRunwayName = ''
                     arrivalRunwayFound = False
-                    arrivalAirportICAOcode =  arrivalAirport.getICAOcode()
-                    for runwayName in runwaysDb.findAirportRunWays(airportICAOcode = arrivalAirportICAOcode, 
-                                                               runwayLengthFeet = 11000.0):
+                    arrivalAirportICAOcode = arrivalAirport.getICAOcode()
+
+                    for runwayName in runwaysDb.findAirportRunWays(
+                            airportICAOcode=arrivalAirportICAOcode,
+                            runwayLengthFeet=11000.0
+                    ):
                         if not(runwaysDb.getFilteredRunWays(
-                                                        airportICAOcode = arrivalAirportICAOcode, 
-                                                        runwayName = runwayName) is None):
+                                airportICAOcode=arrivalAirportICAOcode,
+                                runwayName=runwayName) is None
+                        ):
                             arrivalRunwayName = runwayName
                             arrivalRunwayFound = True
                             break
                     ''' we have a pair of airports '''
-                    
                     if departureRunwayFound and arrivalRunwayFound:
                         distanceMeters = departureAirport.getDistanceMetersTo(arrivalAirport)
-                        if  distanceMeters > 300000.0:
-                            print (' ========== Airports Direct Route testing ======= ')
-                            print ('{0} - {1} - distance  = {2} meters'.format(departureAirport.getName(), arrivalAirport.getName(), distanceMeters))
+                        if distanceMeters > 300000.0:
+                            print(' ========== Airports Direct Route testing ======= ')
+                            print('{0} - {1} - distance  = {2} meters'.format(departureAirport.getName(), arrivalAirport.getName(), distanceMeters))
                 
-                            print (departureAirport)
-                            print (arrivalAirport)
+                            print(departureAirport)
+                            print(arrivalAirport)
                             routeFinder = RouteFinder()
-                            if routeFinder.isConnected():    
+
+                            if routeFinder.isConnected():
                                 RFL = 'FL390'
-                        
                                 if routeFinder.findRoute(departureAirport.getICAOcode(), arrivalAirport.getICAOcode(), RFL):
                                     routeList = routeFinder.getRouteAsList()
                                     print (routeList)
@@ -125,13 +133,13 @@ class Test_Route(unittest.TestCase):
                                     
                                     print (strRoute)
                                     
-                                    flightPath = FlightPath(route = strRoute, 
-                                                                aircraftICAOcode = 'B744',
-                                                                RequestedFlightLevel = 390, 
-                                                                cruiseMach = 0.92, 
-                                                                takeOffMassKilograms = 280000.0)
-        
-                                
+                                    flightPath = FlightPath(
+                                        route=strRoute,
+                                        aircraftICAOcode='B744',
+                                        RequestedFlightLevel=390,
+                                        cruiseMach=0.92,
+                                        akeOffMassKilograms=280000.0
+                                    )
                                     print ("=========== Flight Plan compute  =========== " )
                       
                                     t0 = time.clock()
@@ -142,8 +150,6 @@ class Test_Route(unittest.TestCase):
                                     print ('simulation duration= ' + str(time.clock()-t0) + ' seconds')
                                     print ("=========== Flight Plan create output files  =========== ")
                                     flightPath.createFlightOutputFiles()
-                                    
-                                    
         #sys.stdout.close() #ordinary file object
         
         
