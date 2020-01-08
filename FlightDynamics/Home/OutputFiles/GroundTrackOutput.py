@@ -62,10 +62,8 @@ class GroundTrackOutput(object):
         ''' all output files redirected in a specific folder '''
         self.filePath =  self.fileName
         
-        if not('Home' in os.getcwd()):
-            self.FilesFolder = os.path.abspath(os.getcwd() + os.path.sep + 'Home' + os.path.sep + 'ResultsFiles' )
-        else:
-            self.FilesFolder = os.path.abspath(os.getcwd() + os.path.sep + '..' + os.path.sep + 'ResultsFiles' )
+        self.FilesFolder = os.path.dirname(__file__)
+        self.FilesFolder = self.FilesFolder + os.path.sep + '..' + os.path.sep + 'ResultsFiles' 
 
         self.filePath = self.FilesFolder + os.path.sep + self.filePath
         self.workbook = xlsxwriter.Workbook(self.filePath)

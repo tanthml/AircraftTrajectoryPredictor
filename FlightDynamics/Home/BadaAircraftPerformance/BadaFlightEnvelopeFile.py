@@ -121,7 +121,14 @@ class FlightEnvelope(AeroDynamics):
         ''' compute Mean Sea Level altitude expressed in meters '''
         self.targetCruiseAltitudeMslMeters = ( RequestedFlightLevel * 100.0 * Feet2Meter ) + (1013.25 - QNHhectoPascals) * 8.5344
         self.targetCruiseAltitudeMslMeters = ( RequestedFlightLevel * 100.0 * Feet2Meter )
-        print self.className + ': set Cruise FL= {0} - QNH= {1:.2f} hecto Pascals - computed Altitude MSL=  {2:.2f} meters'.format(RequestedFlightLevel , QNHhectoPascals, self.targetCruiseAltitudeMslMeters)
+        print(
+            self.className +
+            ': set Cruise FL= {0} - QNH= {1:.2f} hecto Pascals - '
+            'computed Altitude MSL=  {2:.2f} meters'.format(
+                RequestedFlightLevel, QNHhectoPascals,
+                self.targetCruiseAltitudeMslMeters
+            )
+        )
 
 
     def getTargetCruiseFlightLevelMeters(self):
@@ -146,10 +153,10 @@ class FlightEnvelope(AeroDynamics):
             cruiseMachNumber = self.MaxOpMachNumber
 
         assert (cruiseMachNumber <= self.MaxOpMachNumber)
-        print self.className + ' ===================================================='
-        print self.className + ': set target cruise Mach= {0}'.format(cruiseMachNumber)
+        print(self.className + '====================================================')
+        print(self.className + ': set target cruise Mach= {0}'.format(cruiseMachNumber))
         self.targetCruiseMachNumber = cruiseMachNumber
-        print self.className + ' ===================================================='
+        print(self.className + '====================================================')
 
 
     def getTargetCruiseMach(self):
@@ -166,9 +173,9 @@ class FlightEnvelope(AeroDynamics):
         
 
     def dump(self):
-        print self.className + ': VMO CAS= ' + str(self.MaxOpSpeedCasKnots) + ' knots'
-        print self.className + ': Max Operational Mach Number= ' + str(self.MaxOpMachNumber)
-        print self.className + ': Max Operational Altitude= ' + str(self.MaxOpAltitudeFeet) + ' feet'
+        print(self.className + ': VMO CAS= ' + str(self.MaxOpSpeedCasKnots) + ' knots')
+        print(self.className + ': Max Operational Mach Number= ' + str(self.MaxOpMachNumber))
+        print(self.className + ': Max Operational Altitude= ' + str(self.MaxOpAltitudeFeet) + ' feet')
         
     def __str__(self):
         strMsg = self.className + ': VMO CAS= {0} knots'.format(self.MaxOpSpeedCasKnots)
@@ -236,19 +243,19 @@ class FlightEnvelope(AeroDynamics):
                                                   alt_units='m'
                                                   ) * MeterSecond2Knots
         if (calibratedAirSpeedKnots > self.MaxOpSpeedCasKnots):
-            print self.className + ': CAS= {0:.2f} knots >> higher than Max Op CAS= {1:.2f} knots'.format(calibratedAirSpeedKnots, self.MaxOpSpeedCasKnots)
+            print(self.className + ': CAS= {0:.2f} knots >> higher than Max Op CAS= {1:.2f} knots'.format(calibratedAirSpeedKnots, self.MaxOpSpeedCasKnots))
             endOfSimulation = True
             
         if (altitudeMeanSeaLevelMeters * Meter2Feet) > self.MaxOpAltitudeFeet:
-            print self.className + ': current altitude= {0:.2f} feet >> higher than Max Operational Altitude= {1:.2f} feet'.format((altitudeMeanSeaLevelMeters * Meter2Feet), self.MaxOpAltitudeFeet)
+            print(self.className + ': current altitude= {0:.2f} feet >> higher than Max Operational Altitude= {1:.2f} feet'.format((altitudeMeanSeaLevelMeters * Meter2Feet), self.MaxOpAltitudeFeet))
             endOfSimulation = True
             
         if altitudeMeanSeaLevelMeters < 0.0:
-            print self.className + ': altitude MSL= {0:.2f} meters is negative => end of simulation'.format(altitudeMeanSeaLevelMeters)
+            print(self.className + ': altitude MSL= {0:.2f} meters is negative => end of simulation'.format(altitudeMeanSeaLevelMeters))
             endOfSimulation = True
             
         if trueAirSpeedMetersPerSecond < 0.0:
-            print self.className + ': tas= {0:.2f} m/s is negative => end of simulation'.format(trueAirSpeedMetersPerSecond)
+            print(self.className + ': tas= {0:.2f} m/s is negative => end of simulation'.format(trueAirSpeedMetersPerSecond))
             endOfSimulation = True
 
         return endOfSimulation
@@ -277,7 +284,7 @@ class Test_Class(unittest.TestCase):
 
     def test_Class_One(self):
         
-        print '================ test one ===================='
+        print('================ test one ====================')
         acBd = BadaAircraftDatabase()
         assert acBd.read()
         
@@ -288,16 +295,15 @@ class Test_Class(unittest.TestCase):
         if ( acBd.aircraftExists(aircraftICAOcode) and
              acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
             
-            print acBd.getAircraftFullName(aircraftICAOcode)
+            print(acBd.getAircraftFullName(aircraftICAOcode))
             
             aircraftPerformance = AircraftPerformance(acBd.getAircraftPerformanceFile(aircraftICAOcode))
             flightEnvelope = FlightEnvelope(aircraftPerformance = aircraftPerformance,
                                             ICAOcode = aircraftICAOcode,
                                             atmosphere = atmosphere,
                                             earth = earth)
-            print flightEnvelope
-        
+            print(flightEnvelope)
         
         
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()

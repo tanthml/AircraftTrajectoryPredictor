@@ -46,14 +46,14 @@ def fortran_float(input_string):
     """
     try:
         fl = float(input_string)
-    except ValueError,e:
+    except ValueError:
         match = re_f_float_neg.match(input_string.strip())
         if match:
             processed_string = match.group(1)+'E'+match.group(2)
             fl = float(processed_string)
         else:
-            print "Trying to find number from ",input_string
-            raise e
+            print("Trying to find number from ",input_string)
+            raise ValueError()
     return fl
 
 

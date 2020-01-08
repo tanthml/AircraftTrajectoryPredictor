@@ -86,7 +86,7 @@ class DescentGlideSlope(Graph):
         self.aircraft = aircraft
         
         fieldElevationAboveSeaLevelMeters = arrivalAirport.getFieldElevationAboveSeaLevelMeters()
-        print self.className + ': airport field Elevation Above Sea Level= {0:.2f} meters'.format(fieldElevationAboveSeaLevelMeters)
+        print(self.className + ': airport field Elevation Above Sea Level= {0:.2f} meters'.format(fieldElevationAboveSeaLevelMeters) )
 
         strName = arrivalAirport.getName() + '-' + 'RunWay'+'-'+self.runway.getName()
         self.runWayEndPoint = WayPoint (Name=strName, 
@@ -107,10 +107,10 @@ class DescentGlideSlope(Graph):
         self.runWayTouchDownPoint.setAltitudeMeanSeaLevelMeters(fieldElevationAboveSeaLevelMeters)
         strMsg = self.className + ": distance from RunWay - TouchDown to RunWay - End= "
         strMsg += str(self.runWayTouchDownPoint.getDistanceMetersTo(self.runWayEndPoint)) + " meters"
-        print strMsg
+        print(strMsg)
         
         self.bearingDegrees = self.runWayTouchDownPoint.getBearingDegreesTo(self.runWayEndPoint)
-        print self.className + ": bearing from touch-down to runway end= {0:.2f} degrees".format(self.bearingDegrees)
+        print(self.className + ": bearing from touch-down to runway end= {0:.2f} degrees".format(self.bearingDegrees))
                 
         
     def buildGlideSlope(self,
@@ -186,14 +186,14 @@ class DescentGlideSlope(Graph):
     def buildSimulatedGlideSlope(self, descentGlideSlopeSizeNautics):
         '''====================================================='''
         ''' build the three degrees glide slope '''
-        ''' the slope is built backwards and then it is reversed
+        ''' the slope is built backwards from the touch-down point and then it is reversed
         ''======================================================'''
         #print self.className + ' ======= simulated glide slope ========='
         glideSlopeLengthMeters = descentGlideSlopeSizeNautics * NauticalMiles2Meters
-        print self.className + ': glide slope Length= ' + str(glideSlopeLengthMeters),  ' meters'
+        print(self.className + ': glide slope Length= ' + str(glideSlopeLengthMeters),  ' meters')
 
         bearingDegrees = self.runway.getTrueHeadingDegrees()
-        print self.className + ': glide slope orientation= ' + str(bearingDegrees) + ' degrees'
+        print(self.className + ': glide slope orientation= ' + str(bearingDegrees) + ' degrees')
 
         fieldElevationAboveSeaLevelMeters = self.arrivalAirport.getFieldElevationAboveSeaLevelMeters()
 
@@ -245,7 +245,7 @@ class DescentGlideSlope(Graph):
         for point in reversed(intermediateGlideSlopeRoute):
             self.addVertex(point)
         simulatedGlideSlopeLengthMeters = newIntermediatePoint.getDistanceMetersTo(self.runWayTouchDownPoint)
-        print self.className + ': distance from last way point to touch-down: {0:.2f} nautics'.format(simulatedGlideSlopeLengthMeters * Meter2NauticalMiles)
+        print(self.className + ': distance from last way point to touch-down: {0:.2f} nautics'.format(simulatedGlideSlopeLengthMeters * Meter2NauticalMiles) )
 
 
 
@@ -256,15 +256,16 @@ class Test_DescentGlideSlope(unittest.TestCase):
     
         atmosphere = Atmosphere()
         earth = Earth()
-        print '==================== three degrees Descent Slope Start  ==================== '+ time.strftime("%c")
+        print('==================== three degrees Descent Slope Start  ==================== '+ time.strftime("%c"))
     
         acBd = BadaAircraftDatabase()
         aircraftICAOcode = 'A320'
+        aircraft = None
         if acBd.read():
             if ( acBd.aircraftExists(aircraftICAOcode) 
                  and acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
                 
-                print '==================== aircraft found  ==================== '+ time.strftime("%c")
+                print('==================== aircraft found  ==================== '+ time.strftime("%c"))
     
                 aircraft = BadaAircraft(ICAOcode = aircraftICAOcode, 
                                         aircraftFullName = acBd.getAircraftFullName(aircraftICAOcode),
@@ -274,28 +275,28 @@ class Test_DescentGlideSlope(unittest.TestCase):
                 aircraft.dump()
      
         assert not (aircraft is None)
-        print '==================== runways database ==================== '+ time.strftime("%c")
+        print('==================== runways database ==================== '+ time.strftime("%c"))
         runWaysDatabase = RunWayDataBase()
         assert runWaysDatabase.read()
         
         runway = runWaysDatabase.getFilteredRunWays(airportICAOcode = 'LFML', runwayName = '')
-        print runway
+        print(runway)
       
-        print "=========== arrival airport  =========== " + time.strftime("%c")
+        print("=========== airports  =========== " + time.strftime("%c"))
         airportsDB = AirportsDatabase()
         assert (airportsDB.read())
         
         MarseilleMarignane = airportsDB.getAirportFromICAOCode('LFML')
-        print MarseilleMarignane
+        print(MarseilleMarignane)
         
-        print "=========== descent glide slope  =========== " + time.strftime("%c")
+        print("=========== descent glide slope  =========== " + time.strftime("%c"))
         threeDegreesGlideSlope = DescentGlideSlope(runway = runway, 
                                                    aircraft = aircraft, 
                                                    arrivalAirport = MarseilleMarignane )
         
         initialWayPoint = WayPoint(Name = 'startOfDescentGlideSlope',
                                    )
-        print "=========== DescentGlideSlope build the glide slope  =========== " + time.strftime("%c")
+        print("=========== DescentGlideSlope build the glide slope  =========== " + time.strftime("%c"))
     #     threeDegreesGlideSlope.buildGlideSlope(deltaTimeSeconds = 0.1,
     #                         elapsedTimeSeconds = 0.0, 
     #                         initialWayPoint = None, 
@@ -305,18 +306,18 @@ class Test_DescentGlideSlope(unittest.TestCase):
     
         threeDegreesGlideSlope.buildSimulatedGlideSlope(descentGlideSlopeSizeNautics = 5.0)
         
-        print "=========== DescentGlideSlope  =========== " + time.strftime("%c")
+        print("=========== DescentGlideSlope  =========== " + time.strftime("%c"))
         for node in threeDegreesGlideSlope.getVertices():
-            print node
+            print ( node )
         
-        print "=========== DescentGlideSlope length =========== " + time.strftime("%c")
-        print "get number of vertices= {0}".format( threeDegreesGlideSlope.getNumberOfVertices() )
-        print "get number of edges= {0}".format ( threeDegreesGlideSlope.getNumberOfEdges() )
-        print 'Glide Slope overall length= {0} meters'.format( threeDegreesGlideSlope.computeLengthMeters() )
+        print("=========== DescentGlideSlope length =========== " + time.strftime("%c"))
+        print("get number of vertices= {0}".format( threeDegreesGlideSlope.getNumberOfVertices()))
+        print("get number of edges= {0}".format ( threeDegreesGlideSlope.getNumberOfEdges()))
+        print('Glide Slope overall length= {0} meters'.format( threeDegreesGlideSlope.computeLengthMeters()))
         
         threeDegreesGlideSlope.createKmlOutputFile()
         threeDegreesGlideSlope.createXlsxOutputFile()
-        print '==================== three degrees Descent Slope End  ==================== '+ time.strftime("%c")
+        print('==================== three degrees Descent Slope End  ==================== '+ time.strftime("%c"))
 
 
 if __name__ == '__main__':

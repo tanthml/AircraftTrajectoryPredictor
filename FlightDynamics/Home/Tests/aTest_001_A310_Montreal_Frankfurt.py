@@ -43,7 +43,7 @@ class Test_Route(unittest.TestCase):
     
     #sys.stdout = open('log.txt','w') #redirect all prints to this log file
 
-        print "=========== Flight Plan start  =========== " + time.strftime("%c")
+        print ("=========== Flight Plan start  =========== " + time.strftime("%c"))
         
         strRoute = 'ADEP/CYMX/06-TAMKO-MATOR-DICEN-CHARLEVOIX-RIVIEREDULOUP-LOMSI-RESNO-NETKI-'
         strRoute += 'NIBOG-BELFAST-DUFFY-RINGA-SLYDA-ISLEOFMAN-KELLY-PENIL-ASNIP-MANCHESTER-'
@@ -60,18 +60,18 @@ class Test_Route(unittest.TestCase):
         Cruise Speed    Mach 0.78                                    
         Take Off Weight    62000 kgs    
         '''
-        print "=========== Flight Plan compute  =========== " + time.strftime("%c")
+        print ("=========== Flight Plan compute  =========== " + time.strftime("%c"))
         
         t0 = time.clock()
-        print 'time zero= ' + str(t0)
+        print ('time zero= ' + str(t0))
         lengthNauticalMiles = flightPath.computeLengthNauticalMiles()
-        print 'flight path length= {0:.2f} nautics '.format(lengthNauticalMiles)
+        print ('flight path length= {0:.2f} nautics '.format(lengthNauticalMiles))
         flightPath.computeFlight(deltaTimeSeconds = 1.0)
-        print 'simulation duration= ' + str(time.clock()-t0) + ' seconds'
+        print ('simulation duration= ' + str(time.clock()-t0) + ' seconds')
         
-        print "=========== Flight Plan create output files  =========== " + time.strftime("%c")
+        print ("=========== Flight Plan create output files  =========== " + time.strftime("%c"))
         flightPath.createFlightOutputFiles()
-        print "=========== Flight Plan end  =========== " + time.strftime("%c")
+        print ("=========== Flight Plan end  =========== " + time.strftime("%c"))
 
 if __name__ == '__main__':
     unittest.main()

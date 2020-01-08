@@ -52,14 +52,18 @@ The great circles are the geodesics of the sphere.
 
 import math
 import time
+import unittest
 
 from Home.Environment.Atmosphere import Atmosphere
 from Home.Environment.Earth import Earth
 
 from Home.Environment.WayPointsDatabaseFile import WayPointsDatabase
 from Home.Environment.AirportDatabaseFile import  AirportsDatabase
+from Home.Environment.RunWaysDatabaseFile import RunWayDataBase
 
 from Home.Guidance.WayPointFile import WayPoint
+from Home.Guidance.DescentGlideSlopeFile import DescentGlideSlope
+from Home.Guidance.GroundRunLegFile import GroundRunLeg
 
 from Home.BadaAircraftPerformance.BadaAircraftDatabaseFile import BadaAircraftDatabase
 from Home.BadaAircraftPerformance.BadaAircraftFile import BadaAircraft
@@ -69,6 +73,7 @@ from Home.Guidance.GraphFile import Graph
 EarthMeanRadiusMeters = 6378135.0 # earth’s radius in meters
 Meter2Feet = 3.2808399 # one meter approx == 3 feet (3 feet 3⅜ inches)
 Meter2NauticalMiles = 0.000539956803 # nautical mile
+
 
 class GreatCircleRoute(Graph):
     
@@ -145,7 +150,7 @@ class GreatCircleRoute(Graph):
             
             ''' initialization of the loop '''
             if index == 0:
-                print self.className + ': initial way-point= {0}'.format(self.initialWayPoint)
+                print(self.className + ': initial way-point= {0}'.format(self.initialWayPoint))
                 intermediateWayPoint = self.initialWayPoint
             
             if self.aircraft.isCruiseSpeedReached():
@@ -176,7 +181,7 @@ class GreatCircleRoute(Graph):
             B = math.sin(fprime*distance_radians) / math.sin(distance_radians)
                 
             x = A * math.cos(self.ptlat1_radians) * math.cos(self.ptlon1_radians) + B * math.cos(self.ptlat2_radians) * math.cos(self.ptlon2_radians)
-            y = A * math.cos(self.ptlat1_radians) * math.sin(self.ptlon1_radians) +  B * math.cos(self.ptlat2_radians) * math.sin(self.ptlon2_radians)
+            y = A * math.cos(self.ptlat1_radians) * math.sin(self.ptlon1_radians) + B * math.cos(self.ptlat2_radians) * math.sin(self.ptlon2_radians)
             z = A * math.sin(self.ptlat1_radians) + B * math.sin(self.ptlat2_radians)
 
             newLatitudeRadians = math.atan2(z, math.sqrt(math.pow(x,2)+math.pow(y,2)))
@@ -213,92 +218,196 @@ class GreatCircleRoute(Graph):
 #                                                     self.computeLengthMeters()* Meter2NauticalMiles,
 #                                                     elapsedTimeSeconds, int(minutes), int(seconds))
 #         print self.className + strMsg                                               
-        print self.className + ': final way-point= {0}'.format(intermediateWayPoint)
+        print(self.className + ': final way-point= {0}'.format(intermediateWayPoint))
         return endOfSimulation
        
 
-def mainOne():
-    
-    print '==================== departure airport ==================== '+ time.strftime("%c")
-    CharlesDeGaulle = airportsDB.getAirportFromICAOCode('LFPG')
-    print CharlesDeGaulle
-    
-#     MarseilleMarignane = airportsDB.getAirportFromICAOCode('LFML')
-#     print MarseilleMarignane
+class Test_Class(unittest.TestCase):
 
-    print '==================== arrival airport ==================== '+ time.strftime("%c")
-
-    JohnFiztgeraldKennedy = airportsDB.getAirportFromICAOCode('KJFK')
-    print JohnFiztgeraldKennedy
-    
-    print '==================== Great Circle ==================== '+ time.strftime("%c")
-
-    elapsedTimeSeconds = 0.0
-    acA320.setCurrentAltitudeSeaLevelMeters(elapsedTimeSeconds, 0.0)
-    acA320.setTrueAirSpeedMetersSecond(elapsedTimeSeconds, 70.0)
-    
-    try:
-        greatCircle = GreatCircleRoute(initialWayPoint=CharlesDeGaulle, 
-                                       finalWayPoint=JohnFiztgeraldKennedy,
-                                       aircraft=acA320)
-        greatCircle.computeGreatCircle()
-        print 'main great circle length= ' + str(greatCircle.computeLengthMeters()) + ' meters'
-    except Exception as e:
-        print 'Exception raised= {0}'.format(e)
-    greatCircle.createKmlOutputFile()
-    greatCircle.createXlsxOutputFile()
-
-if __name__ == '__main__':
-    
-    t0 = time.clock()
-    print " ========== Great Circle ======= time start= ", t0
-    atmosphere = Atmosphere()
-    earth = Earth()
-    
-    print '==================== Great Circle ==================== '+ time.strftime("%c")
-    acBd = BadaAircraftDatabase()
-    aircraftICAOcode = 'A320'
-    if acBd.read():
-        if ( acBd.aircraftExists(aircraftICAOcode) 
-             and acBd.aircraftPerformanceFileExists(acBd.getAircraftPerformanceFile(aircraftICAOcode))):
+    def test_One(self):  
+        
+        atmosphere = Atmosphere()
+        earth = Earth()
+        
+        print('==================== Aircraft ==================== '+ time.strftime("%c"))
+        acBd = BadaAircraftDatabase()
+        aircraftICAOcode = 'A320'
+        if acBd.read():
+            if ( acBd.aircraftExists(aircraftICAOcode) 
+                 and acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
+                
+                print('==================== aircraft found  ==================== '+ time.strftime("%c"))
+                aircraft = BadaAircraft(ICAOcode = aircraftICAOcode, 
+                                            aircraftFullName = acBd.getAircraftFullName(aircraftICAOcode),
+                                            badaPerformanceFilePath = acBd.getAircraftPerformanceFile(aircraftICAOcode),
+                                            atmosphere = atmosphere,
+                                            earth = earth)
+                print ( aircraft )
+                assert not(aircraft is None)
             
-            print '==================== aircraft found  ==================== '+ time.strftime("%c")
-            acA320 =BadaAircraft(aircraftICAOcode, 
-                                    acBd.getAircraftPerformanceFile(aircraftICAOcode),
-                                    atmosphere,
-                                    earth)
-            print acA320
-    
-    print '====================  airport database ==================== '+ time.strftime("%c")
-    airportsDB = AirportsDatabase()
-    assert not(airportsDB is None)
-    
-    wayPointsDb = WayPointsDatabase()
-    assert (wayPointsDb.read())
+        print('==================== departure airport ==================== '+ time.strftime("%c"))
+        
+        airportsDB = AirportsDatabase()
+        assert (airportsDB.read())
+        
+        CharlesDeGaulle = airportsDB.getAirportFromICAOCode('LFPG')
+        print(CharlesDeGaulle)
+        
+        print('==================== arrival airport ==================== '+ time.strftime("%c"))
 
-    initialWayPoint = wayPointsDb.getWayPoint('TOU')
-    finalWayPoint = wayPointsDb.getWayPoint('ALIVA')
-    print initialWayPoint.getBearingDegreesTo(finalWayPoint)
-    print finalWayPoint.getBearingDegreesTo(initialWayPoint)
+        MarseilleMarignane = airportsDB.getAirportFromICAOCode('LFML')
+        print(MarseilleMarignane)
+            
+        print('==================== Great Circle ==================== '+ time.strftime("%c"))
     
-    ''' departure ground run => initial speed is null '''
-    trueAirSpeedMetersSecond = 70.0
-    elapsedTimeSeconds = 0.0
-    acA320.setTrueAirSpeedMetersSecond(elapsedTimeSeconds, trueAirSpeedMetersSecond)
-    acA320.setCurrentAltitudeSeaLevelMeters(elapsedTimeSeconds, 0.0) 
-    
-    greatCircle = GreatCircleRoute(initialWayPoint = initialWayPoint, 
-                                    finalWayPoint = finalWayPoint,
-                                    aircraft = acA320)
-    greatCircle.computeGreatCircle()
-    greatCircle.createKmlOutputFile()
-    greatCircle.createXlsxOutputFile()
+        aircraft.setCurrentAltitudeSeaLevelMeters( 
+                                         elapsedTimeSeconds = 0.0 , 
+                                         altitudeMeanSeaLevelMeters = 0.0,
+                                         lastAltitudeMeanSeaLevelMeters = 0.0,
+                                         targetCruiseAltitudeMslMeters = 10000.0)
+        
+        aircraft.initStateVector( 
+                        elapsedTimeSeconds = 0.0,
+                        trueAirSpeedMetersSecond = 70.0,
+                        airportFieldElevationAboveSeaLevelMeters = 152.0)
+        
+        aircraft.setTargetCruiseFlightLevel(RequestedFlightLevel = 310, 
+                                   departureAirportAltitudeMSLmeters = 152.0)
+        
+        print('==================== runways database ==================== '+ time.strftime("%c"))
+        runWaysDatabase = RunWayDataBase()
+        assert runWaysDatabase.read()
+        arrivalRunway = runWaysDatabase.getFilteredRunWays(airportICAOcode = 'LFML', runwayName = '')
 
+        print('==================== Compute touch down ==================== '+ time.strftime("%c"))
 
-    ''' set start of great circle computation '''
-    t0 = time.clock()
-    
+        arrivalGroundRun = GroundRunLeg( runway   = arrivalRunway,
+                                         aircraft = aircraft,
+                                         airport  = MarseilleMarignane )
+        touchDownWayPoint = arrivalGroundRun.computeTouchDownWayPoint()
+        aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
 
-    tend = time.clock()
-    print " ========== Great Circle ======= duration= ", (tend-t0)
+        print("=========== simulated descent glide slope  =========== " + time.strftime("%c"))
+ 
+        threeDegreesGlideSlope = DescentGlideSlope(runway = arrivalRunway, 
+                                                   aircraft = aircraft, 
+                                                   arrivalAirport = MarseilleMarignane )
+        threeDegreesGlideSlope.buildSimulatedGlideSlope(descentGlideSlopeSizeNautics = 5.0)
+        approachWayPoint = threeDegreesGlideSlope.getLastVertex().getWeight()
+        
+        aircraft.setTargetApproachWayPoint(approachWayPoint)
+        
+        print('==================== Great Circle ==================== '+ time.strftime("%c"))
+
+        greatCircle = GreatCircleRoute(initialWayPoint = CharlesDeGaulle, 
+                                           finalWayPoint = approachWayPoint,
+                                           aircraft = aircraft)
+        
+        distanceStillToFlyMeters = CharlesDeGaulle.getDistanceMetersTo(approachWayPoint)
+        greatCircle.computeGreatCircle(deltaTimeSeconds = 1.0,
+                           elapsedTimeSeconds = 0.0,
+                           distanceStillToFlyMeters = distanceStillToFlyMeters,
+                           distanceToLastFixMeters = distanceStillToFlyMeters)
+        print('main great circle length= ' + str(greatCircle.computeLengthMeters()) + ' meters')
+                        
+        greatCircle.createKmlOutputFile()
+        greatCircle.createXlsxOutputFile()
+
+    def test_Two(self):  
     
+        t0 = time.clock()
+        print(" ========== Great Circle ======= time start= ", t0)
+        atmosphere = Atmosphere()
+        earth = Earth()
+        
+        print('==================== Great Circle ==================== '+ time.strftime("%c"))
+        acBd = BadaAircraftDatabase()
+        aircraftICAOcode = 'A320'
+        if acBd.read():
+            if ( acBd.aircraftExists(aircraftICAOcode) 
+                 and acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
+                
+                print ( '==================== aircraft found  ==================== '+ time.strftime("%c") )
+                aircraft = BadaAircraft(ICAOcode = aircraftICAOcode, 
+                                            aircraftFullName = acBd.getAircraftFullName(aircraftICAOcode),
+                                            badaPerformanceFilePath = acBd.getAircraftPerformanceFile(aircraftICAOcode),
+                                            atmosphere = atmosphere,
+                                            earth = earth)
+                print(aircraft)
+        
+        else:
+            
+            print('====================  airport database ==================== '+ time.strftime("%c"))
+            airportsDB = AirportsDatabase()
+            assert not(airportsDB is None)
+            
+            wayPointsDb = WayPointsDatabase()
+            assert (wayPointsDb.read())
+        
+            initialWayPoint = wayPointsDb.getWayPoint('TOU')
+            finalWayPoint = wayPointsDb.getWayPoint('ALIVA') 
+            print(initialWayPoint.getBearingDegreesTo(finalWayPoint))
+            print(finalWayPoint.getBearingDegreesTo(initialWayPoint))
+            
+            ''' departure ground run => initial speed is null '''
+            trueAirSpeedMetersSecond = 70.0
+            elapsedTimeSeconds = 0.0
+    
+            aircraft.setCurrentAltitudeSeaLevelMeters( 
+                                             elapsedTimeSeconds = 0.0 , 
+                                             altitudeMeanSeaLevelMeters = 0.0,
+                                             lastAltitudeMeanSeaLevelMeters = 0.0,
+                                             targetCruiseAltitudeMslMeters = 10000.0)
+                   
+            aircraft.initStateVector( 
+                            elapsedTimeSeconds = 0.0,
+                            trueAirSpeedMetersSecond = 70.0,
+                            airportFieldElevationAboveSeaLevelMeters = 152.0)
+            
+            aircraft.setTargetCruiseFlightLevel(RequestedFlightLevel = 310, 
+                                       departureAirportAltitudeMSLmeters = 152.0)
+            
+            print ( "=========== simulated descent glide slope  =========== " + time.strftime("%c") )
+            MarseilleMarignane = airportsDB.getAirportFromICAOCode('LFML')
+            
+            
+            print ( '==================== runways database ==================== '+ time.strftime("%c") )
+            runWaysDatabase = RunWayDataBase()
+            assert runWaysDatabase.read()
+            runway = runWaysDatabase.getFilteredRunWays(airportICAOcode = 'LFML', runwayName = '')
+    
+            arrivalGroundRun = GroundRunLeg( runway   = runway,
+                                             aircraft = aircraft,
+                                             airport  = MarseilleMarignane )
+            
+            touchDownWayPoint = arrivalGroundRun.computeTouchDownWayPoint()
+            aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
+    
+            threeDegreesGlideSlope = DescentGlideSlope(runway = runway, 
+                                                       aircraft = aircraft, 
+                                                       arrivalAirport = MarseilleMarignane )
+            threeDegreesGlideSlope.buildSimulatedGlideSlope(descentGlideSlopeSizeNautics = 5.0)
+            approachWayPoint = threeDegreesGlideSlope.getLastVertex().getWeight()
+            
+            aircraft.setTargetApproachWayPoint(approachWayPoint)
+            
+            ''' =================================='''
+            greatCircle = GreatCircleRoute(initialWayPoint = initialWayPoint, 
+                                            finalWayPoint = finalWayPoint,
+                                            aircraft = aircraft)
+            
+            distanceStillToFlyMeters = initialWayPoint.getDistanceMetersTo(approachWayPoint)
+    
+            greatCircle.computeGreatCircle( 
+                               deltaTimeSeconds = 0.1,
+                               elapsedTimeSeconds = 0.0,
+                               distanceStillToFlyMeters = distanceStillToFlyMeters,
+                               distanceToLastFixMeters = distanceStillToFlyMeters)
+            
+            print ( 'main great circle length= ' + str(greatCircle.computeLengthMeters()) + ' meters' )
+    
+            greatCircle.createKmlOutputFile()
+            greatCircle.createXlsxOutputFile()
+        
+if __name__ == '__main__':
+    unittest.main()

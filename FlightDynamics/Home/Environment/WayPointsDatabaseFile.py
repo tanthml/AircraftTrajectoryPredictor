@@ -33,8 +33,7 @@ import unittest
 
 from Home.Guidance.WayPointFile import WayPoint
 
-from Home.xlrd import open_workbook
-from Home.xlwt.Workbook import Workbook
+from xlrd import open_workbook
 
 fieldNames = ['WayPoint', 'Country' , 'Type', 'Latitude', 'Longitude' ]
 
@@ -46,7 +45,7 @@ def convertDegreeMinuteSecondToDecimal(DegreeMinuteSecond='43-40-51.00-N'):
     '''
     DecimalValue = 0.0
     coeff = 0.0
-    assert isinstance(DegreeMinuteSecond, str) or isinstance(DegreeMinuteSecond, unicode)
+    assert isinstance(DegreeMinuteSecond, str) 
         
     if ( str(DegreeMinuteSecond).endswith("N") or 
          str(DegreeMinuteSecond).endswith("E") or 
@@ -115,15 +114,11 @@ class WayPointsDatabase(object):
         
         self.FilePath = 'WayPoints.xls'
             
-        self.FilesFolder = os.getcwd()
-        if not('Home' in self.FilesFolder) and not('Environment' in self.FilesFolder):
-            self.FilesFolder += os.path.sep + 'Home' + os.path.sep + 'Environment'
-        else:
-            self.FilesFolder += os.path.sep + '..' +  os.path.sep + 'Environment'
+        self.FilesFolder = os.path.dirname(__file__)
 
-        print self.className + ': file folder= {0}'.format(self.FilesFolder)
+        print(self.className + ': file folder= {0}'.format(self.FilesFolder))
         self.FilePath = os.path.abspath(self.FilesFolder+ os.path.sep + self.FilePath)
-        print self.className + ': file path= {0}'.format(self.FilePath)
+        print(self.className + ': file path= {0}'.format(self.FilePath))
 
         self.WayPointsDict = {}
         self.ColumnNames = {}
@@ -142,7 +137,7 @@ class WayPointsDatabase(object):
                 index = 0
                 for column in rowValues:
                     if column not in fieldNames:
-                        print self.className + ': ERROR - expected waypoints column name= {0} not in field names'.format(column)
+                        print(self.className + ': ERROR - expected waypoints column name= {0} not in field names'.format(column) )
                         return False
                     else:
                         self.ColumnNames[column] = index
@@ -155,12 +150,12 @@ class WayPointsDatabase(object):
                     for column in self.ColumnNames:
                         if column == 'Latitude' or column == 'Longitude':
                             ''' replace degree character '''
-                            strLatLong = unicode(rowValues[self.ColumnNames[column]]).strip()
-                            if u'°' in strLatLong:
-                                strLatLong = unicode(strLatLong).replace(u'°','-')
-                                strLatLong = strLatLong.encode('ascii', 'ignore')
+                            strLatLong = (rowValues[self.ColumnNames[column]]).strip()
+                            if '°' in strLatLong:
+                                strLatLong = (strLatLong).replace('°','-')
+                                #strLatLong = strLatLong.encode('ascii', 'ignore')
     
-                            strLatLong = str(strLatLong).strip().replace(u"'", u'-').replace(u' ',u'').replace(u'"',u'')
+                            strLatLong = str(strLatLong).strip().replace("'", '-').replace(' ','').replace('"','')
                             #print 'lat-long= '+ strLatLong
                             wayPointDict[column] = convertDegreeMinuteSecondToDecimal(strLatLong)
     
@@ -176,17 +171,17 @@ class WayPointsDatabase(object):
 
     
     def getWayPoint(self, Name):
-        assert isinstance(Name, (str, unicode)) and len(Name)>0
+        assert isinstance(Name, (str)) and len(Name)>0
         if str(Name).upper() in self.WayPointsDict.keys():
             return self.WayPointsDict[str(Name).upper()]
         else:
-            print self.className + ': WARNING - way point= {0} not in the database !!!'.format(str(Name).upper())
+            print(self.className + ': WARNING - way point= {0} not in the database !!!'.format(str(Name).upper()))
             return None
     
     
     def hasWayPoint(self, Name):
-        assert isinstance(Name, (str, unicode)) and len(Name)>0
-        return self.WayPointsDict.has_key(str(Name).upper().strip())
+        assert isinstance(Name, (str)) and len(Name)>0
+        return str(Name).upper().strip() in self.WayPointsDict
 
     
     def getWayPoints(self):
@@ -197,9 +192,9 @@ class WayPointsDatabase(object):
 
     def insertWayPoint(self, wayPointName, Latitude, Longitude):
         
-        assert isinstance(wayPointName, (str, unicode)) and len(wayPointName)>0
-        assert isinstance(Latitude, (str, unicode)) and len(Latitude)>0
-        assert isinstance(Longitude, (str, unicode)) and len(Longitude)>0
+        assert isinstance(wayPointName, (str)) and len(wayPointName)>0
+        assert isinstance(Latitude, (str)) and len(Latitude)>0
+        assert isinstance(Longitude, (str)) and len(Longitude)>0
         
         ''' re open the work book '''
         self.WayPointsDict.clear()
@@ -218,10 +213,10 @@ class WayPointsDatabase(object):
             numRow = sheet.nrows 
             numCol = sheet.ncols 
 
-            for row in xrange(numRow): 
+            for row in range(numRow): 
                 '''  Get all the rows in the sheet (each rows is a list) ''' 
                 rowList = sheet.row_values(row) 
-                for col in xrange(numCol): 
+                for col in range(numCol): 
                     '''  Get all the values in each list ''' 
                     oneValue = rowList[col] 
                     '''  Copy the values to target worksheet ''' 
@@ -231,8 +226,8 @@ class WayPointsDatabase(object):
             writableSheet.write(numRow , 0, wayPointName)
             writableSheet.write(numRow , 1, 'SomeWhere')
             writableSheet.write(numRow , 2, 'waypoint')
-            writableSheet.write(numRow , 3, unicode(Latitude) )
-            writableSheet.write(numRow , 4, unicode(Longitude) )
+            writableSheet.write(numRow , 3, (Latitude) )
+            writableSheet.write(numRow , 4, (Longitude) )
             
             writableBook.save(self.FilePath)
             return True
@@ -249,30 +244,30 @@ class Test_Main(unittest.TestCase):
 
     def test_main(self):
     
-        print '==================== Way-Points ===================='
+        print('==================== Way-Points ====================')
         wayPointsDb = WayPointsDatabase()
         self.assertTrue( wayPointsDb.read() , 'way points DB correctly read')
             
         TOU = wayPointsDb.getWayPoint('tou')
-        print TOU
+        print(TOU )
         
         TouLatDegrees = TOU.getLatitudeDegrees()
-        print 'TOU latitude= {0} degrees'.format(TouLatDegrees)
-        print '==================== Way-Points ===================='
+        print( 'TOU latitude= {0} degrees'.format(TouLatDegrees))
+        print( '==================== Way-Points ====================')
         for wayPoint in wayPointsDb.getWayPoints():
-            print wayPoint
-        print '==================== Way-Points ===================='
+            print ( wayPoint )
+        print( '==================== Way-Points ====================')
         NOT_EXISTING = wayPointsDb.getWayPoint('doesnotexist')
-        print NOT_EXISTING
+        print( NOT_EXISTING)
         
-        print 'number of wayPoints= {0}'.format(wayPointsDb.getNumberOfWayPoints())
-        ret = wayPointsDb.insertWayPoint('VALEK', u"N31°40'58.50" + '"', u"N31°40'58.50" + '"')
+        print('number of wayPoints= {0}'.format(wayPointsDb.getNumberOfWayPoints()))
+        ret = wayPointsDb.insertWayPoint('VALEK', "N31°40'58.50" + '"', "N31°40'58.50" + '"')
         if wayPointsDb.hasWayPoint('VALEK'):
             self.assertFalse(ret, 'insertion not done')
         else:
             self.assertTrue(ret, 'insertion correct')
     
-        print 'number of wayPoints= {0}'.format(wayPointsDb.getNumberOfWayPoints())
+        print('number of wayPoints= {0}'.format(wayPointsDb.getNumberOfWayPoints()))
     
     
 if __name__ == '__main__':

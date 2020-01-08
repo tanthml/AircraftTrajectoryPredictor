@@ -107,7 +107,7 @@ Works up to 84.852 km (278,386 ft) altitude.
 
 """
 
-import unit_conversion as U
+import Home.aerocalc.unit_conversion as U
 import math as M
 import locale as L
 try:
@@ -253,8 +253,10 @@ def alt2temp(H, alt_units=default_alt_units,
     elif H <= 84.852:
         temp = T71 + (H - 71) * L71
     else:
-        raise ValueError, \
-            'This function is only implemented for altitudes of 84.852 km and below.'
+        raise ValueError(
+            'This function is only implemented for '
+            'altitudes of 84.852 km and below.'
+        )
 
     return U.temp_conv(temp, to_units=temp_units, from_units='K')
 
@@ -452,8 +454,10 @@ def alt2press_ratio(H, alt_units=default_alt_units):
     if H <= 84.852:
         return _alt2press_ratio_gradient(H, 71, P71, T71, L71)
     else:
-        raise ValueError, \
-            'This function is only implemented for altitudes of 84.852 km and below.'
+        raise ValueError(
+            'This function is only implemented for '
+            'altitudes of 84.852 km and below.'
+        )
 
 
 def alt2press(H, 
@@ -542,7 +546,7 @@ def pressure_alt(H, alt_setting, alt_units=default_alt_units):
         alt_setting = U.press_conv(alt_setting, from_units='hpa',
                                    to_units='in HG')
     if alt_setting < 25 or alt_setting > 35:
-        raise ValueError, 'Altimeter setting out of range.'
+        raise ValueError('Altimeter setting out of range.')
     HP = H + 145442.2 * (1 - (alt_setting / P0) ** 0.190261)
     HP = U.len_conv(HP, from_units='ft', to_units=alt_units)
     return HP
@@ -713,8 +717,10 @@ def density2alt(Rho, density_units=default_density_units,
         H = _density2alt_gradient(Rho, Rho71, 71, T71, L71)
 
     if H > 84.852:
-        raise ValueError, \
-            'This function is only implemented for altitudes of 84.852 km and below.'
+        raise ValueError(
+            'This function is only implemented for '
+            'altitudes of 84.852 km and below.'
+        )
 
     return U.len_conv(H, from_units='km', to_units=alt_units)
 
@@ -935,8 +941,9 @@ def sat_press(
 
         if T != 'FALSE':
             if DP > T:
-                raise ValueError, \
+                raise ValueError(
                     'The dew point cannot be greater than the temperature.'
+                )
 
         DP = U.temp_conv(DP, from_units=temp_units, to_units='C')
 
@@ -946,19 +953,24 @@ def sat_press(
     else:
 
         if RH == 'FALSE':
-            raise ValueError, \
-                'Either DP (dew point) or RH (relative humidity) must be specified.'
+            raise ValueError(
+                'Either DP (dew point) or RH (relative humidity) '
+                'must be specified.'
+            )
 
     # relative humidity is specified
     # confirm relative humidity is in range
 
         if RH < 0 or RH > 1:
-            raise ValueError, \
+            raise ValueError(
                 'The relative humidity must be in the range of 0 to 1.'
+            )
 
         if T == 'FALSE':
-            raise ValueError, \
-                'If the relative humidity is specified, the temperature must also be specified.'
+            raise ValueError(
+                'If the relative humidity is specified, '
+                'the temperature must also be specified.'
+            )
 
         T = U.temp_conv(T, from_units=temp_units, to_units='C')
 
@@ -1008,11 +1020,11 @@ def density_alt2temp(
 
     da_low = density_alt(press_alt, low, alt_units=alt_units)
     if da_low > density_alt_seek:
-        raise ValueError, 'Initial low guess too high.'
+        raise ValueError('Initial low guess too high.')
 
     da_high = density_alt(press_alt, high, alt_units=alt_units)
     if da_high < density_alt_seek:
-        raise ValueError, 'Initial high guess too low.'
+        raise ValueError('Initial high guess too low.')
 
     guess = (low + high) / 2.
     da_guess = density_alt(press_alt, guess, alt_units=alt_units)
@@ -1067,10 +1079,9 @@ def density_alt_table(
             line_buffer.append('   (' + alt_units + ')     (deg '
                                 + temp_units + ')')
     elif format == 'html':
-        print 'creating html'
+        print('creating html')
     else:
-        raise ValueError, \
-            'Invalid format.  Must be either "text" or "html"'
+        raise ValueError('Invalid format.  Must be either "text" or "html"')
 
     if multi_units:
         for alt in range(max(density_alt_seek - alt_range / 2., 0),
@@ -1098,7 +1109,7 @@ def density_alt_table(
         for line in line_buffer:
             OUT.write(line + '\n')
 
-        print 'file selected'
+        print('file selected')
     else:
         return '\n'.join(line_buffer)
 
@@ -1187,8 +1198,10 @@ def press2alt(P, press_units=default_press_units,
         H = _press2alt_gradient(P, P71, 71, T71, L71)
 
     if H > 84.852:
-        raise ValueError, \
-            'This function is only implemented for altitudes of 84.852 km and below.'
+        raise ValueError(
+            'This function is only implemented for '
+            'altitudes of 84.852 km and below.'
+        )
 
     return U.len_conv(H, from_units='km', to_units=alt_units)
 

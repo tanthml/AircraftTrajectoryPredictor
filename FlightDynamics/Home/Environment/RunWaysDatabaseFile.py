@@ -31,7 +31,7 @@ import os
 import time
 import unittest
 
-from Home.xlrd import open_workbook
+from xlrd import open_workbook
 
 fieldNames = ['id' , 'airport_ref', 'airport_ident' , 'length_ft' , 'width_ft' ,
               'surface' , 'lighted', 'closed', 
@@ -81,8 +81,8 @@ class RunWay(object):
         
         self.className = self.__class__.__name__
 
-        assert not(Name is None) and isinstance(Name, (str, unicode)) 
-        assert not(airportICAOcode is None) and isinstance(airportICAOcode, (str, unicode))
+        assert not(Name is None) and isinstance(Name, (str)) 
+        assert not(airportICAOcode is None) and isinstance(airportICAOcode, (str))
                     
         assert not (LengthFeet is None) and isinstance(LengthFeet, float) and (LengthFeet>0.0)
             
@@ -141,24 +141,23 @@ class RunWayDataBase(object):
 
         self.FilePath = "RunWays.xls"
         
-        self.FilesFolder = os.getcwd()
-        if not('Home' in self.FilesFolder) and not('Environment' in self.FilesFolder):
-            self.FilesFolder += os.path.sep + 'Home' + os.path.sep + 'Environment'
-        else:
-            ''' case when the run is launched from Home/Tests '''
-            self.FilesFolder += os.path.sep  + '..' + os.path.sep  + 'Environment'
+        #self.FilesFolder = os.getcwd()
+        self.FilesFolder = os.path.dirname(__file__)
 
-        print self.className + ': file folder= {0}'.format(self.FilesFolder)
+        print(self.className + ': file folder= {0}'.format(self.FilesFolder))
         self.FilePath = os.path.abspath(self.FilesFolder+ os.path.sep + self.FilePath)
-        print self.className + ': file path= {0}'.format(self.FilePath)
+        print(self.className + ': file path= {0}'.format(self.FilePath))
 
         #self.runWaysDb = {}
         
     def getInternalRunWays(self, rowValues):
         '''
-        in one row there might be TWO runways
+        in one row there might be TWO run-ways
         '''
-        if len(str(rowValues[self.ColumnNames['id']]).strip())> 0:
+        #print ( 'id content= {0}'.format( rowValues[self.ColumnNames['id']] ) )
+        #print ( type ( rowValues[self.ColumnNames['id']] ) )
+        id_content = str( int ( rowValues[self.ColumnNames['id']] ) )
+        if len(id_content.strip())> 0:
                 
             runwayDict = {}
             for column in self.ColumnNames:
@@ -180,7 +179,7 @@ class RunWayDataBase(object):
                         
                 else:
                     # string fields
-                    runwayDict[column] = unicode(rowValues[self.ColumnNames[column]]).strip()
+                    runwayDict[column] = str(rowValues[self.ColumnNames[column]]).strip()
             ''' we have transformed the row values into a Dictionnary => now create the runways '''
             keyOne = ''
             keyTwo = ''
@@ -258,7 +257,7 @@ class RunWayDataBase(object):
         
         runwaysDict = self.getRunWaysAsDict(airportICAOcode)
         
-        for runway in runwaysDict.itervalues():
+        for runway in runwaysDict.values():
             yield runway
             
         
@@ -283,6 +282,7 @@ class RunWayDataBase(object):
         
     def read(self):
         ''' this method does not read the whole file - only the headers '''
+        print(self.FilePath)
         assert len(self.FilePath)>0 and os.path.isfile(self.FilePath) 
         book = open_workbook(self.FilePath, formatting_info=True)
         ''' assert there is only one sheet '''
@@ -294,7 +294,7 @@ class RunWayDataBase(object):
                 index = 0
                 for column in rowValues:
                     if column not in fieldNames:
-                        print self.className + ': ERROR - expected runway column name= {0} not in field names'.format(column)
+                        print(self.className + ': ERROR - expected runway column name= {0} not in field names'.format(column) )
                         return False
                     else:
                         self.ColumnNames[column] = index
@@ -302,15 +302,13 @@ class RunWayDataBase(object):
                 break
         
         return True
-    
-    
+
     def __str__(self):
-        print self.className + ':RunWay DataBase= {0}'.format(self.FilePath)
-        
-        
+        print(self.className + ':RunWay DataBase= {0}'.format(self.FilePath) )
+
     def getFilteredRunWays(self, airportICAOcode, runwayName = ''):
         assert not(airportICAOcode is None) 
-        assert isinstance(airportICAOcode, (str,unicode)) 
+        assert isinstance(airportICAOcode, (str)) 
         assert (len(airportICAOcode)>0)
         #print self.className + ': query for airport= {0} and runway= {1}'.format(airportICAOcode, runwayName)
         assert not(self.sheet is None)
@@ -319,16 +317,12 @@ class RunWayDataBase(object):
             rowValues = self.sheet.row_values(row, start_colx=0, end_colx=self.sheet.ncols)
             if (rowValues[self.ColumnNames['airport_ident']] == airportICAOcode):
                 runwaysDict.update(self.getInternalRunWays(rowValues))
-        if runwaysDict.has_key(runwayName):
+        if runwayName in runwaysDict:
             return runwaysDict[runwayName]
         else:
-            ''' return arbitrary chosen first runway '''
-            if len(runwaysDict.keys())> 0 :
-                return runwaysDict.values()[0]
-            else:
-                return None
-        
-        
+            ''' return arbitrary chosen first run-way '''
+            return runwaysDict.get(list (runwaysDict)[0])
+
     def __getitem__(self, key):
         if key in self.runWaysDb.keys():
             return self.runWaysDb[key]
@@ -340,75 +334,75 @@ class Test_Main(unittest.TestCase):
 
     def test_main_one(self):
     
-        print '====================run-ways===================='
+        print('====================run-ways====================')
         t0 = time.clock()
     
         runWaysDatabase = RunWayDataBase()
         if runWaysDatabase.read():
-            print 'runways DB correctly read'
+            print('runways DB correctly read')
         
         t1 = time.clock()
-        print 'time spent= {0:.2f} seconds'.format(t1-t0)
+        print('time spent= {0:.2f} seconds'.format(t1-t0))
         
-        print '====================run-ways===================='
+        print('====================run-ways====================')
     
-        print runWaysDatabase.findAirportRunWays('LFPG')
+        print(runWaysDatabase.findAirportRunWays('LFPG'))
         t2 = time.clock()
-        print 'time spent= {0:.2f} seconds'.format(t2-t1)
+        print('time spent= {0:.2f} seconds'.format(t2-t1))
         
     
-        print '====================run-ways get filtered run ways===================='
-        print runWaysDatabase.getFilteredRunWays('LFML') 
+        print('====================run-ways get filtered run ways====================')
+        print(runWaysDatabase.getFilteredRunWays('LFML') )
         
-        print '====================run-ways get filtered run ways===================='
-        print runWaysDatabase.getFilteredRunWays('LFBO')
-        print '====================run-ways get filtered run ways===================='
-    
-        print runWaysDatabase.findAirportRunWays('LFBO')
+        print('====================run-ways get filtered run ways====================')
+        print( runWaysDatabase.getFilteredRunWays('LFBO') )
+        
+        print('====================run-ways get filtered run ways====================')
+        print(runWaysDatabase.findAirportRunWays('LFBO') )
         
         
-        print '====================run-ways get filtered run ways===================='
+        print('====================run-ways get filtered run ways====================')
         runway = runWaysDatabase.getFilteredRunWays('EGLL') 
-        print runway
+        print(runway)
         
-        print '====================run-ways get filtered run ways===================='
+        print('====================run-ways get filtered run ways====================')
         #print 'number of runways: ' + str(len(runWaysDatabase.getRunWays('LFPG')))
         runway = runWaysDatabase.getFilteredRunWays(airportICAOcode = 'LFPG', runwayName  = '27L')
-        print runway
+        print(runway)
         
-        print '====================run-ways get filtered run ways===================='
+        print('====================run-ways get filtered run ways====================')
         runway = runWaysDatabase.getFilteredRunWays(airportICAOcode = 'KJFK', runwayName  = '31L')
-        print runway
+        print(runway)
         
-        print '====================run-ways get filtered run ways===================='
+        print('====================run-ways get filtered run ways====================')
     
         runway = runWaysDatabase.getFilteredRunWays(airportICAOcode = 'KLAX', runwayName  = '06L')
-        print runway
+        print(runway)
         
         for ICAOcode in ['LFPG', 'LFPO', 'LFBO', 'LFML', 'LFST', 'KJFK', 'SBGL', 'LFBD']:
             
-            print '====================run-ways get filtered run ways===================='
+            print('====================run-ways get filtered run ways====================')
     
             tStart = time.clock()
-            print runWaysDatabase.findAirportRunWays(ICAOcode)
+            print(runWaysDatabase.findAirportRunWays(ICAOcode))
             tEnd = time.clock()
-            print 'icao= {0} - duration= {1:.2f} seconds'.format(ICAOcode, (tEnd-tStart))
+            print('icao= {0} - duration= {1:.2f} seconds'.format(ICAOcode, (tEnd-tStart)))
     #     print '====================run-ways===================='
     #     for runway in runWaysDatabase.getRunWays():
     #         print runway.getAirportICAOcode() + '-' + runway.getName()
             
-        print '====================run-ways===================='
+        print('====================run-ways====================')
     #     for runway in runWaysDatabase.getRunWays():
     #         print runway
     
-        print '====================run-ways get filtered run ways===================='
+        print('====================run-ways get filtered run ways====================')
     
-        print runWaysDatabase.findAirportRunWays('LPPT')
+        print ( runWaysDatabase.findAirportRunWays('LPPT') )
     
     
     def test_main_two(self):
         
-        print '====================run-ways test two ===================='
+        print('====================run-ways test two ====================')
 
         runWaysDatabase = RunWayDataBase()
         self.assertTrue( runWaysDatabase.read() )
@@ -418,25 +412,26 @@ class Test_Main(unittest.TestCase):
         
     def test_main_three(self):
         
-        print '====================run-ways test three ===================='
+        print('====================run-ways test three ====================')
 
         runWaysDatabase = RunWayDataBase()
         self.assertTrue( runWaysDatabase.read() )
         
         airportICAOcode = 'LFPG'
         for runway in runWaysDatabase.getRunWaysAsDict(airportICAOcode) :
-            print runway
+            print(runway)
 
     def test_main_four(self):
 
-        print '==================== run-ways test four ===================='
+        print('==================== run-ways test four ====================')
     
         runWaysDatabase = RunWayDataBase()
         self.assertTrue( runWaysDatabase.read() )
         
         airportICAOcode = 'LFPG'
-        for runway in runWaysDatabase.getRunWays(airportICAOcode) :
-            print runway
-    
+        for runway in runWaysDatabase.getRunWays(airportICAOcode):
+            print(runway)
+
+
 if __name__ == '__main__':
     unittest.main()

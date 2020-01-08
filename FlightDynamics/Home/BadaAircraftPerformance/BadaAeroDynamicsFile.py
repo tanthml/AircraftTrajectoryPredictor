@@ -78,8 +78,14 @@ class AeroDynamics(object):
         self.DragCoeff = aircraftPerformance.getDragCoeff()
         self.LandingGearDragCoeff = aircraftPerformance.getLandingGearDragCoeff()
         
-        print self.className + ': Wing Area Surface= {0} Square-Meters'.format(self.WingAreaSurfaceSquareMeters)
-        print self.className + ': stall speed= {0} knots'.format(self.VstallKcas)
+        print(
+            self.className + ': Wing Area Surface= {0} Square-Meters'.format(
+                self.WingAreaSurfaceSquareMeters
+            )
+        )
+        print(
+            self.className + ': stall speed= {0} knots'.format(self.VstallKcas)
+        )
         
     def getVstallKcas(self, phase):
         ''' calibrated air speed in Knots '''
@@ -102,15 +108,23 @@ class AeroDynamics(object):
         return strMsg
         
     def dump(self):
-        print self.className + ': Wing Area Surface= {0} Square-Meters'.format(self.WingAreaSurfaceSquareMeters)
-        print self.className + ': stall speed= {0} knots'.format(self.VstallKcas)
+        print(
+            self.className + ': Wing Area Surface= {0} Square-Meters'.format(
+                self.WingAreaSurfaceSquareMeters
+            )
+        )
+        print(
+            self.className + ': stall speed= {0} knots'.format(
+                self.VstallKcas
+            )
+        )
         
 
 class Test_Class(unittest.TestCase):
 
     def test_Class_One(self):
             
-        print '================ test one ===================='
+        print('================ test one ====================')
         acBd = BadaAircraftDatabase()
         assert acBd.read()
         
@@ -121,24 +135,24 @@ class Test_Class(unittest.TestCase):
         if ( acBd.aircraftExists(aircraftICAOcode) and
              acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
             
-            print acBd.getAircraftFullName(aircraftICAOcode)
+            print(acBd.getAircraftFullName(aircraftICAOcode))
             
             aircraftPerformance = AircraftPerformance(acBd.getAircraftPerformanceFile(aircraftICAOcode))
             aeroDynamics = AeroDynamics(aircraftPerformance, atmosphere, earth)
             
-            print aeroDynamics
+            print(aeroDynamics)
             for phase in ['CR', 'IC', 'TO', 'AP', 'LD']:
-                print 'phase= {0} - Vstall CAS= {1} knots'.format(phase, aeroDynamics.getVstallKcas(phase))
+                print('phase= {0} - Vstall CAS= {1} knots'.format(phase, aeroDynamics.getVstallKcas(phase)))
                 
             for phase in ['CR', 'IC', 'TO', 'AP', 'LD']:
-                print 'phase= {0} - Drag Coeff= {1}'.format(phase, aeroDynamics.getDragCoeff(phase))
+                print('phase= {0} - Drag Coeff= {1}'.format(phase, aeroDynamics.getDragCoeff(phase)))
 
-            print 'Wing Area Surface={0} Square-meters'.format(aeroDynamics.getWingAreaSurfaceSquareMeters())
+            print('Wing Area Surface={0} Square-meters'.format(aeroDynamics.getWingAreaSurfaceSquareMeters()))
         
         
     def test_Class_Two(self):
             
-        print '================ test Two ===================='
+        print('================ test Two ====================')
         acBd = BadaAircraftDatabase()
         assert acBd.read()
         
@@ -149,17 +163,17 @@ class Test_Class(unittest.TestCase):
         if ( acBd.aircraftExists(aircraftICAOcode) and
              acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
             
-            print acBd.getAircraftFullName(aircraftICAOcode)
+            print(acBd.getAircraftFullName(aircraftICAOcode))
             
             aircraftPerformance = AircraftPerformance(acBd.getAircraftPerformanceFile(aircraftICAOcode))
             aeroDynamics = AeroDynamics(aircraftPerformance, atmosphere, earth)
             
-            print aeroDynamics
+            print(aeroDynamics)
             phase = 'XX'
             try:
-                print aeroDynamics.getDragCoeff(phase)
+                print(aeroDynamics.getDragCoeff(phase))
             except Exception as e: 
-                print 'test two = {0}'.format(e)
+                print('test two = {0}'.format(e))
                 self.assertTrue(isinstance(e, AssertionError))
             
             

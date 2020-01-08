@@ -30,9 +30,8 @@ see route finder website
 
 '''
 import time
-import urllib2
-import urllib
-from HTMLParser import HTMLParser
+from urllib.request import urlopen
+from html.parser import HTMLParser
 
 from Home.Environment.WayPointsDatabaseFile import WayPointsDatabase
 
@@ -85,7 +84,7 @@ class RouteFinder(object):
                "Accept": "text/plain"}
 
     def isConnected(self):
-        response = urllib2.urlopen(url = self.base_url)
+        response = urlopen(url=self.base_url)
         the_html_page = response.read()
         #print the_html_page
         htmlParser = HtmlParser(searchedTag = 'form')
@@ -171,26 +170,27 @@ class RouteFinder(object):
                                        fix['longitude'])
 
 
-#============================================
 if __name__ == '__main__':
     
     wayPointsDb = WayPointsDatabase()
     assert ( wayPointsDb.read() )
-    
-    print "=========== Route Finder start  =========== " + time.strftime("%c")
+
+    print("=========== Route Finder start  =========== " + time.strftime("%c"))
 
     routeFinder = RouteFinder()
     if routeFinder.isConnected():
-        print 'route finder is connected'
+        print('route finder is connected' )
         
-        print "=========== Route Finder start  =========== " + time.strftime("%c")
+        print("=========== Route Finder start  =========== " + time.strftime("%c"))
         Adep = 'LPPT'
         Ades = 'LFPG'
         RFL = 'FL360'
         
         if routeFinder.findRoute(Adep, Ades, RFL):
             routeList = routeFinder.getRouteAsList()
-            print routeList
+            print(routeList)
+             
             routeFinder.insertWayPointsInDatabase(wayPointsDb)
+
     
-    print "=========== Route Finder start  =========== " + time.strftime("%c")
+    print("=========== Route Finder start  =========== " + time.strftime("%c"))

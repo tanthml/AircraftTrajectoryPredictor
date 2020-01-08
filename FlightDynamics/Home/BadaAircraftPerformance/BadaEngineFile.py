@@ -132,9 +132,13 @@ class Engine(FuelConsumption):
         return self.engineType.isPiston()
 
     def getMaxClimbThrustCoeff(self, index):
+        assert isinstance(index, int)
+        assert index >= 0 and index < 5
         return self.maxClimbThrustCoeff[index]
 
     def getDescentThrustCoeff(self, index):
+        assert isinstance(index, int)
+        assert index >= 0 and index < 5
         return self.descentThrustCoeff[index]
     
     
@@ -172,7 +176,7 @@ class Test_Class(unittest.TestCase):
 
     def test_Class_One(self):
             
-        print '================ test one ===================='
+        print('================ test one ====================')
         acBd = BadaAircraftDatabase()
         assert acBd.read()
         
@@ -180,20 +184,20 @@ class Test_Class(unittest.TestCase):
         if ( acBd.aircraftExists(aircraftICAOcode) and
              acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
             
-            print acBd.getAircraftFullName(aircraftICAOcode)
+            print(acBd.getAircraftFullName(aircraftICAOcode))
             
             aircraftPerformance = AircraftPerformance(acBd.getAircraftPerformanceFile(aircraftICAOcode))
             engine = Engine(aircraftPerformance)
             
-            print 'engine is Jet= {0}'.format(engine.isJet())
-            print 'engine is Turbo Prop= {0}'.format(engine.isTurboProp())
-            print 'engine is Piston= {0}'.format(engine.isPiston())
+            print('engine is Jet= {0}'.format(engine.isJet()))
+            print('engine is Turbo Prop= {0}'.format(engine.isTurboProp()))
+            print( 'engine is Piston= {0}'.format(engine.isPiston()))
             self.assertTrue(engine.isJet(), 'A320 is a jet aircraft')
 
 
     def test_Class_Two(self):
         
-        print '================ test Two ===================='
+        print('================ test Two ====================')
 
         acBd = BadaAircraftDatabase()
         assert acBd.read()
@@ -202,17 +206,17 @@ class Test_Class(unittest.TestCase):
         if ( acBd.aircraftExists(aircraftICAOcode) and
              acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
             
-            print acBd.getAircraftFullName(aircraftICAOcode)
+            print(acBd.getAircraftFullName(aircraftICAOcode))
             
             aircraftPerformance = AircraftPerformance(acBd.getAircraftPerformanceFile(aircraftICAOcode))
             engine = Engine(aircraftPerformance)
             
-            print 'engine fuel consumption coeff= {0}'.format(engine.getFuelConsumptionCoeff())
+            print('engine fuel consumption coeff= {0}'.format(engine.getFuelConsumptionCoeff()))
         
         
     def test_Class_Three(self):
 
-        print '================ test Three ===================='
+        print('================ test Three ====================')
                 
         acBd = BadaAircraftDatabase()
         assert acBd.read()
@@ -221,18 +225,18 @@ class Test_Class(unittest.TestCase):
         if ( acBd.aircraftExists(aircraftICAOcode) and
              acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
             
-            print acBd.getAircraftFullName(aircraftICAOcode)
+            print(acBd.getAircraftFullName(aircraftICAOcode))
             
             aircraftPerformance = AircraftPerformance(acBd.getAircraftPerformanceFile(aircraftICAOcode))
             engine = Engine(aircraftPerformance)
             
             for index in range(0,5):
-                print index
-                print 'engine Max Climb Thrust coeff= {0}'.format(engine.getMaxClimbThrustCoeff(index))
+                print(index)
+                print('engine Max Climb Thrust coeff= {0}'.format(engine.getMaxClimbThrustCoeff(index)))
             
     def test_Class_Four(self):
 
-        print '================ test Four ===================='
+        print('================ test Four ====================')
 
         acBd = BadaAircraftDatabase()
         assert acBd.read()
@@ -241,14 +245,15 @@ class Test_Class(unittest.TestCase):
         if ( acBd.aircraftExists(aircraftICAOcode) and
              acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
             
-            print acBd.getAircraftFullName(aircraftICAOcode)
+            print(acBd.getAircraftFullName(aircraftICAOcode))
             
             aircraftPerformance = AircraftPerformance(acBd.getAircraftPerformanceFile(aircraftICAOcode))
             engine = Engine(aircraftPerformance)
             
             for index in range(0,5):
-                print index
-                print 'engine Descent Thrust Coeff= {0}'.format(engine.getDescentThrustCoeff(index))
-        
+                print(index)
+                print('engine Descent Thrust Coeff= {0}'.format(engine.getDescentThrustCoeff(index)))
+
+
 if __name__ == '__main__':
     unittest.main()

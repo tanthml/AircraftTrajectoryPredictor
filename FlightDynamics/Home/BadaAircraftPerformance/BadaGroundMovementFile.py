@@ -57,5 +57,5 @@ class GroundMovement(object):
         raise ValueError('not yet implemented')
 
     def dump(self):
-        print self.className + ': Take Off Length= ' + str(self.TakeOffLengthMeters) + ' meters'
-        print self.className + ': Landing Length= ' + str(self.LandingLengthMeters) + ' meters'
+        print(self.className + ': Take Off Length= ' + str(self.TakeOffLengthMeters) + ' meters')
+        print(self.className + ': Landing Length= ' + str(self.LandingLengthMeters) + ' meters')

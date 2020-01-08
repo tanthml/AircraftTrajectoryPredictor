@@ -100,8 +100,8 @@ class StateVector(object):
         if len(self.aircraftStateHistory) > 0:
             ''' values returns a list who first element is the expected value '''
             lastDict = self.aircraftStateHistory[-1]
-            values = lastDict.values()[0]
-            altitudeMSLmeters = values[0]
+            values = lastDict.values()
+            altitudeMSLmeters = list(values)[0][0]
             return altitudeMSLmeters
         else:
             return 0.0
@@ -112,8 +112,8 @@ class StateVector(object):
             ''' each recorded value is a dictionary '''
             ''' values() retrieves a list with one element - take the one with index = 0 '''
             lastDict = self.aircraftStateHistory[-1]
-            values = lastDict.values()[0]
-            trueAirSpeedMetersSecond =  values[1]
+            values = lastDict.values()
+            trueAirSpeedMetersSecond = list(values)[0][1]
             return trueAirSpeedMetersSecond
         else:
             raise ValueError(self.className + ': speed history is empty')
@@ -122,8 +122,8 @@ class StateVector(object):
     def getCurrentDistanceFlownMeters(self):
         if len(self.aircraftStateHistory) > 0:
             lastDict = self.aircraftStateHistory[-1]
-            values = lastDict.values()[0]
-            currentDistanceMeters = values[2]
+            values = lastDict.values()
+            currentDistanceMeters = list(values)[0][2]
             return currentDistanceMeters
         else:
             return 0.0
@@ -132,8 +132,8 @@ class StateVector(object):
     def getFlightPathAngleDegrees(self):
         if len(self.aircraftStateHistory) > 0:
             lastDict = self.aircraftStateHistory[-1]
-            values = lastDict.values()[0]
-            flightPathAngleDegrees = values[5]
+            values = lastDict.values()
+            flightPathAngleDegrees = list(values)[0][5]
             return flightPathAngleDegrees
         else:
             return 0.0        
@@ -240,5 +240,3 @@ class StateVector(object):
                                                  liftNewtons            ,
                                                  loadFactor)
         xlsxOutput.close()
-                    
-                    

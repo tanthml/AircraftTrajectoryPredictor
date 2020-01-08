@@ -21,6 +21,7 @@
 import math
 Meter2NauticalMiles = 0.000539956803
 
+
 def LatitudeLongitudeAtDistanceBearing(StartLatitudeLongitudeDegrees, DistanceMeters, BearingDegrees):
     '''
     compute latitude and longitude of a point at a given distance and on a radial from a given point
@@ -82,8 +83,9 @@ def LatitudeLongitudeAtDistanceBearing(StartLatitudeLongitudeDegrees, DistanceMe
 #         longitudeDegrees = math.fmod(360.0 + longitudeDegrees , 360.0)
         
     return latitudeDegrees, longitudeDegrees
-    
-def points2bearingDegrees (startLatLongDegrees, endLatLongDegrees):
+
+
+def points2bearingDegrees(startLatLongDegrees, endLatLongDegrees):
     '''
     In aerial terms, "bearing" means the actual compass direction of the forward course of our aircraft
     
@@ -146,6 +148,7 @@ def points2distanceMeters(startLatLongDegrees,  endLatLongDegrees):
     radiusMeters = 6378135.0 # earth’s radius in meters
     return radiusMeters * c
 
+
 def distanceMeters(origin, destination):
     
     lat1, lon1 = origin
@@ -161,41 +164,42 @@ def distanceMeters(origin, destination):
 
     return d
 
+
 if __name__ == '__main__':
     # latitude longitude in degrees
     warsaw = [52.247142, 21.015244]
     cracow = [50.065073, 19.948311]
     
-    print '========== distance ====='
-    print "distance warsaw-cracow= {0} meters".format( points2distanceMeters(warsaw,  cracow))
+    print('========== distance =====')
+    print("distance warsaw-cracow= {0} meters".format( points2distanceMeters(warsaw,  cracow)))
     
     Orly = [48.726246, 2.365136]
     Toulouse = [43.629366, 1.367644]
-    print "distance orly-toulouse= ", points2distanceMeters(Orly,  Toulouse), " meters"
-    print "bearing orly-toulouse= ", points2bearingDegrees(Orly, Toulouse), " degrees"
+    print("distance orly-toulouse= ", points2distanceMeters(Orly,  Toulouse), " meters")
+    print("bearing orly-toulouse= ", points2bearingDegrees(Orly, Toulouse), " degrees")
 
     seattle = [47.621800, -122.350326]
     olympia = [47.041917, -122.893766]
-    print 'distance Seattle Olympia= {0} meters'.format(distanceMeters(seattle, olympia))
-    print 'distance Orly Toulouse= {0} meters'.format(distanceMeters(Orly, Toulouse))
+    print('distance Seattle Olympia= {0} meters'.format(distanceMeters(seattle, olympia)))
+    print('distance Orly Toulouse= {0} meters'.format(distanceMeters(Orly, Toulouse)))
     
-    print '========== bearing ====='
+    print('========== bearing =====')
 
     London = [ 51.5, 0.0 ]
     Orly = [ 48.726254, 2.365247 ]
-    print "bearing London-Orly= ", points2bearingDegrees(London, Orly), " degrees"
-    print "bearing Orly-London= ", points2bearingDegrees(Orly, London), " degrees"
+    print("bearing London-Orly= ", points2bearingDegrees(London, Orly), " degrees")
+    print("bearing Orly-London= ", points2bearingDegrees(Orly, London), " degrees")
 
     Osaka = [34.785528, 135.438222]
     ColdLake = [54.404999 , -110.279444]
 
-    print "distance Osaka-Cold-Lake= {0} nautics".format( points2distanceMeters(Osaka,  ColdLake) * Meter2NauticalMiles)
-    print "distance Cold-Lake-Osaka= {0} nautics".format( points2distanceMeters(ColdLake , Osaka) * Meter2NauticalMiles)
+    print("distance Osaka-Cold-Lake= {0} nautics".format( points2distanceMeters(Osaka,  ColdLake) * Meter2NauticalMiles))
+    print("distance Cold-Lake-Osaka= {0} nautics".format( points2distanceMeters(ColdLake , Osaka) * Meter2NauticalMiles))
 
     Mazza = [11.708888888888888, 180.00]
     distanceMeters = 230.710159639
     bearingDegrees = -117.550571114
-    print LatitudeLongitudeAtDistanceBearing(Mazza, distanceMeters, bearingDegrees)
+    print(LatitudeLongitudeAtDistanceBearing(Mazza, distanceMeters, bearingDegrees))
 #     bearingDegrees = 1.0
 #     print LatitudeLongitudeAtDistanceBearing(Mazza, distanceMeters, bearingDegrees)
 #     bearingDegrees = 90.0
@@ -216,4 +220,3 @@ if __name__ == '__main__':
 #     print LatitudeLongitudeAtDistanceBearing(Mazza, distanceMeters, bearingDegrees)
 #     bearingDegrees = -360.0
 #     print LatitudeLongitudeAtDistanceBearing(Mazza, distanceMeters, bearingDegrees)
-    

@@ -33,6 +33,9 @@ import os
 import time
 import unittest
 
+BADA_381_DATA_FILES = 'Bada381DataFiles'
+
+
 class BadaSynonymAircraft(object):
     ''' 
     this class stores the data provided in the synonym file for one aircraft 
@@ -72,23 +75,14 @@ class BadaAircraftDatabase(object):
         self.OPFfileExtension = '.OPF'
         self.BadaSynonymFilePath = 'SYNONYM.NEW'
         
-        self.FilesFolder = os.getcwd()
-        if not('Home' in self.FilesFolder) and not('BadaAircraftPerformance' in self.FilesFolder):
-            self.FilesFolder += os.path.sep + 'Home' + os.path.sep + 'BadaAircraftPerformance'
-        else:
-            ''' case when the run is launched from Home/Tests '''
-            self.FilesFolder += os.path.sep  + '..' + os.path.sep  + 'BadaAircraftPerformance'
+        self.FilesFolder = os.path.dirname(__file__)
             
-        print self.className + ': file folder= {0}'.format(self.FilesFolder)
-        self.BadaSynonymFilePath = os.path.abspath(self.FilesFolder+ os.path.sep + self.BadaSynonymFilePath)
-        print self.className + ': file path= {0}'.format(self.BadaSynonymFilePath)
+        print(self.className + ': file folder= {0}'.format(self.FilesFolder))
+        self.BadaSynonymFilePath = (self.FilesFolder + os.path.sep + self.BadaSynonymFilePath)
+        print(self.className + ': file path= {0}'.format(self.BadaSynonymFilePath))
 
-        self.aircraftFilesFolder = 'Bada381DataFiles'
-        if not('Home' in os.getcwd()):
-            self.aircraftFilesFolder = os.path.abspath(os.getcwd() + os.path.sep + 'Home' + os.path.sep + self.aircraftFilesFolder)
-        else:
-            ''' case when the run is launched from Home/Tests '''
-            self.aircraftFilesFolder = os.path.abspath(os.getcwd() + os.path.sep  + '..' + os.path.sep  + self.aircraftFilesFolder)
+        self.aircraftFilesFolder = BADA_381_DATA_FILES
+        self.aircraftFilesFolder = (os.path.dirname(__file__) + os.path.sep   + self.aircraftFilesFolder)
                
         self.aircraftDict = {}
 
@@ -99,7 +93,7 @@ class BadaAircraftDatabase(object):
         return self.BadaSynonymFilePath
     
     def read(self):
-        print self.className + ': opening file= ', self.BadaSynonymFilePath
+        print(self.className + ': opening file= ', self.BadaSynonymFilePath)
         try:
             f = open(self.BadaSynonymFilePath, "r")
             for line in f:
@@ -138,15 +132,15 @@ class BadaAircraftDatabase(object):
                     OPFfilePrefix = str(str(line).split()[-3])
                     #print self.className + ': OPF file prefix= {0}'.format(OPFfilePrefix)
                     ''' situation after the item finishing with two underscores __ '''
-                    if self.aircraftDict.has_key(aircraftICAOcode ):
-                        print self.className + ': aircraft ICAO code already in Database'
+                    if aircraftICAOcode in self.aircraftDict:
+                        print(self.className + ': aircraft ICAO code already in Database')
                     else:
                         self.aircraftDict[aircraftICAOcode] = BadaSynonymAircraft(aircraftICAOcode = aircraftICAOcode,
                                                                         aircraftFullName = aircraftFullName,
                                                                         OPFfilePrefix = OPFfilePrefix,
                                                                         useSynonym = useSynonym)         
             f.close()
-            print self.className + ': number of aircrafts in db= {0}'.format(len(self.aircraftDict))
+            print(self.className + ': number of aircrafts in db= {0}'.format(len(self.aircraftDict)))
             return True
         except Exception as e:
             raise ValueError(self.className + ': error= {0} while reading= {1} '.format(e, self.BadaSynonymFilePath))
@@ -155,14 +149,18 @@ class BadaAircraftDatabase(object):
 
     def aircraftExists(self, aircraftICAOcode):
         aircraftICAOcode = str(aircraftICAOcode).upper()
-        print self.className + ': aircraft= {0} exists= {1}'.format(aircraftICAOcode, 
-                                                                    self.aircraftDict.has_key(aircraftICAOcode))
-        return self.aircraftDict.has_key(aircraftICAOcode)
+        print(
+            self.className +
+            ': aircraft= {0} exists= {1}'.format(
+                aircraftICAOcode, aircraftICAOcode in self.aircraftDict
+            )
+        )
+        return aircraftICAOcode in self.aircraftDict
 
 
     def getAircraftFullName(self, aircraftICAOcode):
         aircraftICAOcode = str(aircraftICAOcode).upper()
-        if self.aircraftDict.has_key(aircraftICAOcode):
+        if aircraftICAOcode in self.aircraftDict:
             ac = self.aircraftDict[aircraftICAOcode]
             return ac.getAircraftFullName()
         else:
@@ -171,11 +169,12 @@ class BadaAircraftDatabase(object):
 
     def getAircraftPerformanceFile(self, aircraftICAOcode):
         aircraftICAOcode = str(aircraftICAOcode).upper()
-        if self.aircraftDict.has_key(aircraftICAOcode):
+        if aircraftICAOcode in self.aircraftDict:
+            
             ac = self.aircraftDict[aircraftICAOcode]
             OPFfilePrefix = ac.getAircraftOPFfilePrefix()
             
-            filePath = os.path.abspath(self.aircraftFilesFolder + os.path.sep + OPFfilePrefix + self.OPFfileExtension)
+            filePath = os.path.dirname(__file__) + os.path.sep + ".." + os.path.sep + BADA_381_DATA_FILES + os.path.sep + OPFfilePrefix + self.OPFfileExtension
             return filePath
         
         return ''
@@ -184,15 +183,15 @@ class BadaAircraftDatabase(object):
     def aircraftPerformanceFileExists(self, aircraftICAOcode):
         ''' checks that the performance file OPF exists in its specific folder '''
         aircraftICAOcode = str(aircraftICAOcode).upper()
-        if self.aircraftDict.has_key(aircraftICAOcode):
-            print self.className + ': aircraft= {0} - found in database'.format(aircraftICAOcode)
+        if aircraftICAOcode in self.aircraftDict:
+            print ( self.className + ': aircraft= {0} - found in database'.format(aircraftICAOcode) )
             ac = self.aircraftDict[aircraftICAOcode]
             OPFfilePrefix = ac.getAircraftOPFfilePrefix()
 
-            filePath = os.path.abspath(self.aircraftFilesFolder + os.path.sep + OPFfilePrefix + self.OPFfileExtension)
-            print self.className + ': aircraft= {0} - OPF file= {1} - exists= {2}'.format(aircraftICAOcode,
+            filePath = os.path.dirname(__file__) + os.path.sep + ".." + os.path.sep + BADA_381_DATA_FILES + os.path.sep + OPFfilePrefix + self.OPFfileExtension
+            print ( self.className + ': aircraft= {0} - OPF file= {1} - exists= {2}'.format(aircraftICAOcode,
                                                                                           filePath,
-                                                                                          os.path.exists(filePath))
+                                                                                          os.path.exists(filePath)) )
             return os.path.exists(filePath) and os.path.isfile(filePath)
         
         return False
@@ -203,38 +202,38 @@ class TestMethods(unittest.TestCase):
     def test_upper(self):
     
         t0 = time.clock()
-        print '================================='
+        print('=================================')
         acBd = BadaAircraftDatabase()
-        print 'file= {0} - exists= {1}'.format(acBd.getSynonymFilePath(), acBd.exists())
+        print('file= {0} - exists= {1}'.format(acBd.getSynonymFilePath(), acBd.exists()))
         
         t1 = time.clock()
-        print 'duration= {0} seconds'.format(t1-t0)
+        print('duration= {0} seconds'.format(t1-t0))
         
-        print '================================='
+        print('=================================')
         readReturn = acBd.read()
-        print 'file= {0} - read= {1}'.format(acBd.getSynonymFilePath(), readReturn )
+        print ( 'file= {0} - read= {1}'.format(acBd.getSynonymFilePath(), readReturn ) )
         
-        t2 = time.clock()
-        print 'duration= {0} seconds'.format(t2-t1)
-        print '================================='
+        t2 = time.clock() 
+        print('duration= {0} seconds'.format(t2-t1))
+        print('=================================')
     
-        print acBd.getAircraftFullName('A320')
+        print(acBd.getAircraftFullName('A320'))
         
-        print '================================='
-        print 'aircraft= {0} - exists= {1}'.format('A320', acBd.aircraftPerformanceFileExists('A320'))
+        print('=================================')
+        print('aircraft= {0} - exists= {1}'.format('A320', acBd.aircraftPerformanceFileExists('A320')))
         
-        print '================================='
-        print acBd.getAircraftPerformanceFile('A320')
+        print('=================================')
+        print(acBd.getAircraftPerformanceFile('A320'))
         
         for acICAOcode in ['A10', 'b737', 'A320', 'B747', 'F50', 'B741', 'B742', 'B743', 'A319', 'CL73']:
-            print "================================="
-            print "aircraft= ", acICAOcode
-            print "================================="
-            print 'aircraft= {0} exists= {1}'.format(acICAOcode, acBd.aircraftExists(acICAOcode))
+            print("=================================")
+            print("aircraft= ", acICAOcode)
+            print("=================================")
+            print('aircraft= {0} exists= {1}'.format(acICAOcode, acBd.aircraftExists(acICAOcode)))
             if acBd.aircraftExists(acICAOcode):
-                print 'aircraft= {0} performance file= {1}'.format(acICAOcode, acBd.getAircraftPerformanceFile(acICAOcode))
-                print 'aircraft= {0} full name= {1}'.format(acICAOcode, acBd.getAircraftFullName(acICAOcode))
-                print  acBd.getAircraftPerformanceFile(acICAOcode)
+                print('aircraft= {0} performance file= {1}'.format(acICAOcode, acBd.getAircraftPerformanceFile(acICAOcode)))
+                print('aircraft= {0} full name= {1}'.format(acICAOcode, acBd.getAircraftFullName(acICAOcode)))
+                print(acBd.getAircraftPerformanceFile(acICAOcode))
                         
                         
         assert (True)

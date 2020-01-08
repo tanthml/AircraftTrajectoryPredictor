@@ -74,7 +74,7 @@ class GroundRunLeg(Graph):
         
         assert (isinstance(runway, RunWay) and not(runway is None))
         self.runway = runway
-        print self.className + ': ground run - run-way true heading= ' + str(self.runway.getTrueHeadingDegrees()) + ' degrees'
+        print(self.className + ': ground run - run-way true heading= ' + str(self.runway.getTrueHeadingDegrees()) + ' degrees' )
         
         assert (isinstance(aircraft, BadaAircraft) and not(aircraft is None))
         self.aircraft = aircraft
@@ -218,7 +218,7 @@ class GroundRunLeg(Graph):
         These V speeds are normally published as IAS rather than CAS so they can be read directly from the airspeed indicator.
         '''
         VStallSpeedCASKnots = self.aircraft.computeStallSpeedCasKnots()
-        print self.className + ': V stall Calibrated AirSpeed= {0:.2f} knots'.format(VStallSpeedCASKnots)
+        print(self.className + ': V stall Calibrated AirSpeed= {0:.2f} knots'.format(VStallSpeedCASKnots))
         ''' loop until Stall CAS reached '''
         endOfSimulation = False
         while ((endOfSimulation == False) and
@@ -280,36 +280,36 @@ if __name__ == '__main__':
     atmosphere = Atmosphere()
     earth = Earth()
     
-    print '==================== Ground run ==================== '+ time.strftime("%c")
+    print('==================== Ground run ==================== '+ time.strftime("%c"))
     acBd = BadaAircraftDatabase()
     aircraftICAOcode = 'A320'
     if acBd.read():
         if ( acBd.aircraftExists(aircraftICAOcode) 
              and acBd.aircraftPerformanceFileExists(acBd.getAircraftPerformanceFile(aircraftICAOcode))):
             
-            print '==================== aircraft found  ==================== '+ time.strftime("%c")
+            print('==================== aircraft found  ==================== '+ time.strftime("%c"))
             aircraft = BadaAircraft(aircraftICAOcode, 
                                   acBd.getAircraftPerformanceFile(aircraftICAOcode),
                                   atmosphere,
                                   earth)
             aircraft.dump()
     
-    print '==================== Ground run ==================== '+ time.strftime("%c")
+    print('==================== Ground run ==================== '+ time.strftime("%c"))
     airportsDB = AirportsDatabase()
     assert airportsDB.read()
     
     CharlesDeGaulle = airportsDB.getAirportFromICAOCode('LFPG')
-    print CharlesDeGaulle
+    print(CharlesDeGaulle)
     
-    print '==================== Ground run - read runway database ==================== '+ time.strftime("%c")
+    print('==================== Ground run - read runway database ==================== '+ time.strftime("%c"))
     runWaysDatabase = RunWayDataBase()
     assert runWaysDatabase.read()
     
-    print '==================== Ground run ==================== '+ time.strftime("%c")
+    print('==================== Ground run ==================== '+ time.strftime("%c"))
     runway = runWaysDatabase.getFilteredRunWays('LFPG', aircraft.WakeTurbulenceCategory)
-    print runway
+    print(runway)
     
-    print '==================== departure Ground run ==================== '+ time.strftime("%c")
+    print('==================== departure Ground run ==================== '+ time.strftime("%c"))
     groundRun = GroundRunLeg(runway=runway, 
                              aircraft=aircraft,
                              airport=CharlesDeGaulle)
@@ -319,16 +319,16 @@ if __name__ == '__main__':
     groundRun.createKmlOutputFile()
     groundRun.createXlsxOutputFile()
         
-    print '==================== Get Arrival Airport ==================== '+ time.strftime("%c")
+    print('==================== Get Arrival Airport ==================== '+ time.strftime("%c"))
     arrivalAirportIcaoCode = 'LFML'
     arrivalAirport = airportsDB.getAirportFromICAOCode(arrivalAirportIcaoCode)
-    print arrivalAirport
+    print(arrivalAirport)
     
-    print '====================  arrival run-way ==================== '+ time.strftime("%c")
+    print('====================  arrival run-way ==================== '+ time.strftime("%c"))
     arrivalRunway = runWaysDatabase.getFilteredRunWays(arrivalAirportIcaoCode,
                                                         aircraft.WakeTurbulenceCategory)
-    print arrivalRunway
-    print '==================== arrival Ground run ==================== '+ time.strftime("%c")
+    print(arrivalRunway)
+    print('==================== arrival Ground run ==================== '+ time.strftime("%c"))
 #     aircraft.setLandingConfiguration(elapsedTimeSeconds = 0.0)
 #     
 #     aircraft.initStateVector(elapsedTimeSeconds = 0.0,

@@ -159,7 +159,7 @@ class TurnLeg(Graph):
         strMsg += ' to {0:.2f} degrees'.format(self.finalHeadingDegrees)
         strMsg += ' - turn step is= {0:.2f} degrees'.format(self.stepDegrees) 
                                                 
-        print self.className + strMsg
+        print(self.className + strMsg)
         self.previousDistanceToArrivalAxisMeters = 0.0
         
     def buildTurnLeg(self, 
@@ -201,7 +201,7 @@ class TurnLeg(Graph):
             ''' Radius = (tas*tas) / (gravity * tan(bank angle = 15 degrees)) '''
             radiusOfTurnMeters = (tasMetersPerSecond * tasMetersPerSecond) / (9.81 * math.tan(math.radians(bankAngleDegrees)))
         
-        print self.className + ': tas= {0:.2f} knots - radius of turn= {1:.2f} meters - radius of turn= {2:.2f} nautics'.format(tasKnots, radiusOfTurnMeters, radiusOfTurnMeters*Meter2NauticalMiles)            
+        print(self.className + ': tas= {0:.2f} knots - radius of turn= {1:.2f} meters - radius of turn= {2:.2f} nautics'.format(tasKnots, radiusOfTurnMeters, radiusOfTurnMeters*Meter2NauticalMiles) )
         ''' index used to initialise the loop '''        
         index = 0
             
@@ -215,7 +215,7 @@ class TurnLeg(Graph):
         ''' loop from initial heading to final heading '''
         continueTurning = True
         currentHeadingDegrees = self.initialHeadingDegrees
-        print self.className + ': initial heading= {0:.2f} degrees'.format(self.initialHeadingDegrees)
+        print(self.className + ': initial heading= {0:.2f} degrees'.format(self.initialHeadingDegrees))
         passedThrough360 = False
         endOfSimulation = False
         while ( (endOfSimulation == False) and (continueTurning == True)):
@@ -334,7 +334,7 @@ class TurnLeg(Graph):
                 self.addVertex(point)
         
         '''' print final heading  '''
-        print self.className + ': final heading= {0:.2f} degrees'.format(currentHeadingDegrees)
+        print(self.className + ': final heading= {0:.2f} degrees'.format(currentHeadingDegrees))
         return endOfSimulation
 
 
@@ -428,7 +428,7 @@ class TurnLeg(Graph):
         assert (self.getNumberOfVertices()>1)
         lastVertex = self.getVertex(self.getNumberOfVertices()-1)
         lastWayPoint = lastVertex.getWeight()
-        print 'location of the last point ' + str(lastWayPoint)
+        print('location of the last point ' + str(lastWayPoint))
         
         
     def buildNewSimulatedArrivalTurnLeg(self, 
@@ -449,7 +449,7 @@ class TurnLeg(Graph):
         
         ''' Radius = (tas*tas) / (gravity * tan(bank angle = 15 degrees)) '''
         radiusOfTurnMeters = (tasMetersPerSecond * tasMetersPerSecond) / (9.81 * math.tan(math.radians(bankAngleDegrees)))
-        print self.className + ': tas= {0:.2f} knots - radius of turn= {1:.2f} meters - radius of turn= {2:.2f} nautics'.format(tasKnots, radiusOfTurnMeters, radiusOfTurnMeters*Meter2NauticalMiles)            
+        print(self.className + ': tas= {0:.2f} knots - radius of turn= {1:.2f} meters - radius of turn= {2:.2f} nautics'.format(tasKnots, radiusOfTurnMeters, radiusOfTurnMeters*Meter2NauticalMiles) )
  
         ''' index used to initialise the loop '''        
         index = 0
@@ -464,7 +464,7 @@ class TurnLeg(Graph):
         ''' loop from initial heading to final heading '''
         continueTurning = True
         currentHeadingDegrees = self.initialHeadingDegrees
-        print self.className + ': initial heading= {0:.2f} degrees'.format(self.initialHeadingDegrees)
+        print(self.className + ': initial heading= {0:.2f} degrees'.format(self.initialHeadingDegrees))
         passedThrough360 = False
 
         while (  continueTurning == True ):
@@ -555,7 +555,7 @@ class Test_TurnLeg(unittest.TestCase):
 
     def test_TurnLeg(self):
 
-        print '==================== Turn Leg ==================== '+ time.strftime("%c")
+        print('==================== Turn Leg ==================== '+ time.strftime("%c"))
         atmosphere = Atmosphere()
         earth = Earth()
         
@@ -565,7 +565,7 @@ class Test_TurnLeg(unittest.TestCase):
         assert acBd.aircraftExists(aircraftICAOcode) 
         assert acBd.aircraftPerformanceFileExists(aircraftICAOcode)
                 
-        print '==================== aircraft found  ==================== '+ time.strftime("%c")
+        print('==================== aircraft found  ==================== '+ time.strftime("%c"))
         aircraft = BadaAircraft(ICAOcode = aircraftICAOcode, 
                                 aircraftFullName = acBd.getAircraftFullName(aircraftICAOcode),
                                 badaPerformanceFilePath = acBd.getAircraftPerformanceFile(aircraftICAOcode),
@@ -573,37 +573,37 @@ class Test_TurnLeg(unittest.TestCase):
                                 earth = earth)
         aircraft.dump()
                 
-        print '==================== Get Airport ==================== '+ time.strftime("%c")
+        print('==================== Get Airport ==================== '+ time.strftime("%c"))
         airportsDB = AirportsDatabase()
         assert airportsDB.read()
         
-        print '==================== Get Arrival Airport ==================== '+ time.strftime("%c")
+        print('==================== Get Arrival Airport ==================== '+ time.strftime("%c"))
         Lisbonne = airportsDB.getAirportFromICAOCode('LPPT')
-        print Lisbonne
+        print(Lisbonne)
         
-        print '====================  find the run-ways ==================== '+ time.strftime("%c")
+        print('====================  find the run-ways ==================== '+ time.strftime("%c"))
         runWaysDatabase = RunWayDataBase()
         if runWaysDatabase.read():
-            print 'runways DB correctly read'
+            print('runways DB correctly read')
             
-        print '====================  take off run-way ==================== '+ time.strftime("%c")
+        print('====================  take off run-way ==================== '+ time.strftime("%c"))
         arrivalRunway = runWaysDatabase.getFilteredRunWays(
                                                            airportICAOcode = 'LPPT', 
                                                            runwayName = '')
-        print arrivalRunway
+        print( arrivalRunway)
         
-        print '==================== Ground run ==================== '+ time.strftime("%c")
+        print('==================== Ground run ==================== '+ time.strftime("%c"))
         groundRun = GroundRunLeg(runway = arrivalRunway, 
                                  aircraft = aircraft,
                                  airport = Lisbonne)
         
         touchDownWayPoint = groundRun.computeTouchDownWayPoint()
-        print touchDownWayPoint
+        print(touchDownWayPoint)
         groundRun.buildDepartureGroundRun(deltaTimeSeconds = 1.0,
                                           elapsedTimeSeconds = 0.0,
                                           distanceStillToFlyMeters = 0.0,
                                           distanceToLastFixMeters = 0.0)
-        print '==================== Climb Ramp ==================== '+ time.strftime("%c")
+        print('==================== Climb Ramp ==================== '+ time.strftime("%c"))
         
         initialWayPoint = groundRun.getLastVertex().getWeight()
     
@@ -618,16 +618,16 @@ class Test_TurnLeg(unittest.TestCase):
         
         firstGlideSlopeWayPoint = descentGlideSlope.getVertex(v=0).getWeight()
     
-        print '==================== Climb Ramp ==================== '+ time.strftime("%c")
+        print('==================== Climb Ramp ==================== '+ time.strftime("%c"))
         initialWayPoint = groundRun.getLastVertex().getWeight()
     
-        print ' ================== turn leg end =============== '
+        print(' ================== turn leg end =============== ')
         wayPointsDb = WayPointsDatabase()
         assert (wayPointsDb.read())
         Exona = wayPointsDb.getWayPoint('EXONA')
         Rosal = wayPointsDb.getWayPoint('ROSAL')
     
-        print Rosal.getBearingDegreesTo(Exona) 
+        print(Rosal.getBearingDegreesTo(Exona))
         initialHeadingDegrees = arrivalRunway.getTrueHeadingDegrees()
         
         lastTurnLeg = TurnLeg( initialWayPoint = firstGlideSlopeWayPoint, 
@@ -646,8 +646,8 @@ class Test_TurnLeg(unittest.TestCase):
         #descentGlideSlope.createXlsxOutputFile()
         descentGlideSlope.createKmlOutputFile()
         
-        print ' ================== turn leg end =============== '
+        print(' ================== turn leg end =============== ')
+
 
 if __name__ == '__main__':
     unittest.main()
-    

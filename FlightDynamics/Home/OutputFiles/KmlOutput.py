@@ -30,6 +30,7 @@ create a KML output file that is readable in Google Earth
 import os
 import xml.dom.minidom
 
+
 class KmlOutput():
     
     fileName = ""
@@ -51,15 +52,14 @@ class KmlOutput():
         kmlElement = self.kmlDoc.appendChild(kmlElement)
         self.documentElement = self.kmlDoc.createElement('Document')
         self.documentElement = kmlElement.appendChild(self.documentElement)
-        
-        
+
     def write(self, 
               name,
               LongitudeDegrees, 
               LatitudeDegrees, 
               AltitudeAboveSeaLevelMeters):
         
-        assert isinstance(name, (str, unicode))
+        assert isinstance(name, (str))
         assert isinstance(LongitudeDegrees, float)
         assert isinstance(LatitudeDegrees, float)
         assert isinstance(AltitudeAboveSeaLevelMeters, float)
@@ -88,24 +88,17 @@ class KmlOutput():
         
         self.documentElement.appendChild(placemarkElement)
 
-        
     def close(self):
         ''' always write in the results folder '''
-        if not('Home' in os.getcwd()):
-            self.FilesFolder = os.path.abspath(os.getcwd() + os.path.sep + 'Home' + os.path.sep + 'ResultsFiles')
-        else:
-            ''' case when run from Home/Tests '''
-            self.FilesFolder = os.path.abspath(os.getcwd() + os.path.sep + '..' + os.path.sep +  'ResultsFiles')
-
-        filePath = os.path.abspath(self.FilesFolder + os.path.sep + self.fileName)
-        print self.className + ': file path= {0}'.format(filePath)
-        kmlFile = open(filePath, 'w')
-        kmlFile.write(self.kmlDoc.toprettyxml('  ', newl = '\n', encoding = 'utf-8'))
+        self.FilesFolder = os.path.dirname(__file__)
+        self.FilesFolder = self.FilesFolder + os.path.sep + '..' + os.path.sep + 'ResultsFiles'
+        filePath = (self.FilesFolder + os.path.sep + self.fileName)
+        print(self.className + ': file path= {0}'.format(filePath))
+        kmlFile = open(filePath, 'wb')
+        kmlFile.write(self.kmlDoc.toprettyxml('  ', newl='\n', encoding='utf-8'))
         kmlFile.close()
 
-        
-#============================================
+
 if __name__ == '__main__':
     
     ''' create an KML file with all the way points '''
-    

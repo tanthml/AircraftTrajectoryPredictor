@@ -49,10 +49,11 @@ class GroundSpeed(object):
         R2 = TasMetersPerSecond * math.cos(math.radians(velocityAzimuthDegrees))
         R2 += self.wind.windSpeedMetersPerSecond * math.sin(math.radians(90.0-self.wind.windDirectionDegrees))
         return math.degrees(math.atan(R1/R2))
-        
+
+
 if __name__ == '__main__':
     
-    print " ========== Ground Speed testing ======= "
+    print(" ========== Ground Speed testing ======= ")
     
     ''' direction from where comes the wind - as seen by the aircraft '''
     windDirectionDegrees = 125.0
@@ -64,6 +65,6 @@ if __name__ == '__main__':
      
     groundSpeed = GroundSpeed(wind)
     GS = groundSpeed.computeGroundSpeedMetersPerSecond(TasKnots*Knots2MetersPerSecond, velocityAzimuthDegrees)
-    print 'ground speed= {0:.2f} knots'.format(GS * MetersPerSecond2Knots)
+    print('ground speed= {0:.2f} knots'.format(GS * MetersPerSecond2Knots))
     courseDegrees = groundSpeed.computeGroundSpeedAngleDegrees(TasKnots*Knots2MetersPerSecond, velocityAzimuthDegrees)
-    print 'ground track angle= {0:.2f} degrees'.format(courseDegrees)
+    print('ground track angle= {0:.2f} degrees'.format(courseDegrees))

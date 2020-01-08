@@ -81,20 +81,15 @@ class AirportsDatabase(object):
         ''' file name with extension '''
         self.FilePath = "Airports.csv"
         
-        self.airportsFilesFolder = os.getcwd()
-        if not('Home' in self.airportsFilesFolder) and not('Environment' in self.airportsFilesFolder):
-            self.airportsFilesFolder += os.path.sep + 'Home' + os.path.sep + 'Environment'
-        else:
-            ''' case when the run is launched from Home/Tests '''
-            self.airportsFilesFolder += os.path.sep  + '..' + os.path.sep  + 'Environment'
+        self.airportsFilesFolder = os.path.dirname(__file__)
 
-        print self.className + ': file folder= {0}'.format(self.airportsFilesFolder)
-        self.FilePath = os.path.abspath(self.airportsFilesFolder+ os.path.sep + self.FilePath)
-        print self.className + ': file path= {0}'.format(self.FilePath)
+        print(self.className + ': file folder= {0}'.format(self.airportsFilesFolder))
+        self.FilePath = (self.airportsFilesFolder + os.path.sep + self.FilePath)
+        print(self.className + ': file path= {0}'.format(self.FilePath))
 
     def read(self):
         try:
-            dictReader = csv.DictReader(open(self.FilePath), fieldnames=fieldNames)
+            dictReader = csv.DictReader(open(self.FilePath, encoding='utf-8'), fieldnames=fieldNames)
             for row in dictReader:
                 airport = {}
                 for field in fieldNames:
@@ -105,11 +100,12 @@ class AirportsDatabase(object):
                             self.countriesDb.append(country)
                 self.airportsDb[row["ICAO Code"]] = airport
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
             
     def getAirportsFromCountry(self, Country = ''):
-        for row in self.airportsDb.itervalues():
+        for row in self.airportsDb.values():
             if row['Country'] == Country and len(row['ICAO Code'])>0 :
                 airport = Airport(
                                 Name=row['City']+'-'+row['Airport Name'] ,
@@ -122,7 +118,7 @@ class AirportsDatabase(object):
             
             
     def getAirports(self):
-        for row in self.airportsDb.itervalues():
+        for row in self.airportsDb.values():
             if len(row['ICAO Code'])>0 and len(row['Country'])>0:
                 airport = Airport(
                                     Name = row['City']+'-'+row['Airport Name'] ,
@@ -134,9 +130,10 @@ class AirportsDatabase(object):
                 yield airport
     
     def dump(self):
-        if self.airportsDb is None: return
+        if self.airportsDb is None: 
+            return
         for row in self.airportsDb:
-            print row
+            print(self.className + ' - ' + row)
     
     
     def getNumberOfAirports(self):
@@ -146,15 +143,15 @@ class AirportsDatabase(object):
             
     def dumpCountry(self, Country="France"):
         if self.airportsDb is None: return
-        for key , airport in self.airportsDb.iteritems():
-            if str(key).startswith('LF') and airport['Country']==Country :
-                print airport
+        for key, airport in self.airportsDb.items():
+            if str(key).startswith('LF') and airport['Country'] == Country :
+                print(airport)
                
                 
     def getICAOCode(self, airportName = ''):
         if self.airportsDb is None: return ""
         airportsIcaoCodeList = []
-        for key, airport in self.airportsDb.iteritems():
+        for key, airport in self.airportsDb.items():
             if str(airportName).lower() in str(airport["Airport Name"]).lower():
                 airportsIcaoCodeList.append(key)
         if len(airportsIcaoCodeList)==1: return airportsIcaoCodeList[0]
@@ -165,7 +162,7 @@ class AirportsDatabase(object):
         if self.airportsDb is None: return None
         airport = None
         ''' internal airport is a dictionary '''
-        for key, airportInternal in self.airportsDb.iteritems():
+        for key, airportInternal in self.airportsDb.items():
             if key == ICAOcode:
                 airport = Airport(
                                 Name = airportInternal['City']+'-'+airportInternal["Airport Name"] ,
@@ -181,6 +178,3 @@ class AirportsDatabase(object):
         assert not( self.airportsDb is None)
         for country in self.countriesDb:
             yield country
-
-        
-

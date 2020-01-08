@@ -32,11 +32,13 @@ import time
 import math
 import unittest
 
+
 def to_positive_angle(angleDegrees):
     angleDegrees = math.fmod(angleDegrees, 360);
     if (angleDegrees < 0): 
         angleDegrees += 360;
     return angleDegrees;
+
 
 class WayPoint(object):
     className = ''
@@ -145,11 +147,15 @@ class WayPoint(object):
         return WayPoint(Name, latitudeDegrees, longitudeDegrees)    
     
     def dump(self):
-        print "WayPoint Name= ", self.Name, " Lat-deg= ",self.LatitudeDegrees, " Long-deg= ",self.LongitudeDegrees, " flight-level= ", self.AltitudeMeanSeaLevelMeters, " meters"
+        print(
+            "WayPoint Name= ", self.Name, " Lat-deg= ", self.LatitudeDegrees,
+            " Long-deg= ", self.LongitudeDegrees, " flight-level= ",
+            self.AltitudeMeanSeaLevelMeters, " meters"
+        )
         if isinstance(self, Airport):
-            print "way point is an airport"
-        if self.isTopOfDescent==True:
-            print "way Point is Top Of Descent !!! "
+            print("way point is an airport")
+        if self.isTopOfDescent:
+            print("way Point is Top Of Descent !!! ")
 
 
 class Airport(WayPoint):
@@ -176,10 +182,10 @@ class Airport(WayPoint):
         self.isDeparture = isDeparture
         self.isArrival = isArrival
         
-        assert isinstance(ICAOcode, (str,unicode)) and len(ICAOcode)>0
+        assert isinstance(ICAOcode, (str)) and len(ICAOcode) > 0
         self.ICAOcode = ICAOcode
     
-        assert isinstance(Country, (str,unicode)) and len(Country)>0
+        assert isinstance(Country, (str)) and len(Country) > 0
         self.Country = Country
         
     def getICAOcode(self):
@@ -198,7 +204,6 @@ class Airport(WayPoint):
     def getFieldElevationAboveSeaLevelMeters(self):
         return self.fieldElevationAboveSeaLevelMeters
     
-    
     def hasRunWays(self, runwaysDatabase):
         ''' return true if this airport has at least one run-way in the database '''
         assert isinstance(runwaysDatabase, RunWayDataBase) and not(runwaysDatabase is None)
@@ -214,29 +219,28 @@ class Airport(WayPoint):
     
     def dump(self):
         WayPoint.dump(self)
-        print "airport field Elevation above Sea Level Meters=",self.fieldElevationAboveSeaLevelMeters, " meters"
-        print 'airport ICAO code= ' + self.ICAOcode
-
+        print("airport field Elevation above Sea Level Meters=",self.fieldElevationAboveSeaLevelMeters, " meters")
+        print('airport ICAO code= ' + self.ICAOcode)
 
 
 class Test_WayPoint(unittest.TestCase):
 
     def test_WayPoint(self):
     
-        print "=========== WayPoint start  =========== " + time.strftime("%c")
+        print("=========== WayPoint start  =========== " + time.strftime("%c"))
         London = WayPoint('London-Heathrow', 51.5, 0.0)
         Orly = WayPoint('Orly', 48.726254, 2.365247)
-        print "distance from London to Orly= ", London.getDistanceMetersTo(Orly), " meters"
-        print "bearing from London to Orly= ", London.getBearingDegreesTo(Orly), " degrees"
+        print("distance from London to Orly= ", London.getDistanceMetersTo(Orly), " meters")
+        print("bearing from London to Orly= ", London.getBearingDegreesTo(Orly), " degrees")
         
         #Zurich = WayPoint('Zurich-Kloten', 47.458215, 8.555424)
         Marseille = WayPoint('Marseille-Marignane', 43.438431, 5.214382 )
         Zurich = WayPoint('Zurich-Kloten', 47.458215, 8.555424)
         
-        print "=========== WayPoint resume  =========== " + time.strftime("%c")
+        print("=========== WayPoint resume  =========== " + time.strftime("%c") )
     
-        print "distance from Marseille to Zurich= ", Marseille.getDistanceMetersTo(Zurich), " meters"
-        print "bearing from Zurich to Marseille = ", Zurich.getBearingDegreesTo(Marseille), " degrees"
+        print("distance from Marseille to Zurich= ", Marseille.getDistanceMetersTo(Zurich), " meters")
+        print("bearing from Zurich to Marseille = ", Zurich.getBearingDegreesTo(Marseille), " degrees")
         
         distanceMeters = 321584.699454
         bearingDegrees = Zurich.getBearingDegreesTo(Marseille)
@@ -246,19 +250,18 @@ class Test_WayPoint(unittest.TestCase):
         TopOfDescent = Zurich.getWayPointAtDistanceBearing('TopOfDescent', distanceMeters, bearingDegrees)
         TopOfDescent.dump()
         
-        print "=========== WayPoint resume  =========== " + time.strftime("%c")
+        print("=========== WayPoint resume  =========== " + time.strftime("%c"))
         London.dump()
         Orly.dump()
         bearingDegrees = Orly.getBearingDegreesTo(London)
-        print "bearing from London to Orly= ", London.getBearingDegreesTo(Orly), " degrees"
+        print("bearing from London to Orly= ", London.getBearingDegreesTo(Orly), " degrees")
     
         TopOfDescent = Orly.getWayPointAtDistanceBearing('TopOfDescent', distanceMeters, bearingDegrees)
         TopOfDescent.dump()
-        
 
     def test_Airport(self):
 
-        print "=========== Airport  =========== " + time.strftime("%c")
+        print("=========== Airport  =========== " + time.strftime("%c"))
 
         airportICAOcode = 'LFPG'
         CharlesDeGaulle = Airport(Name = 'CharlesDeGaulle',
@@ -270,19 +273,18 @@ class Test_WayPoint(unittest.TestCase):
         self.assertTrue( runWaysDatabase.read() , 'run ways DB read correctly')
         
         self.assertTrue( CharlesDeGaulle.hasRunWays(runWaysDatabase) )
-        print 'airport= {0} has run-ways= {1}'.format(CharlesDeGaulle, CharlesDeGaulle.hasRunWays(runWaysDatabase))
+        print('airport= {0} has run-ways= {1}'.format(CharlesDeGaulle, CharlesDeGaulle.hasRunWays(runWaysDatabase)))
         
-        print "=========== Airport run ways ONE =========== " + time.strftime("%c")
+        print("=========== Airport run ways ONE =========== " + time.strftime("%c"))
 
         for runway in CharlesDeGaulle.getRunWaysAsDict(runWaysDatabase):
-            print runway
+            print ( runway )
             
-        print "=========== Airport run ways TWO =========== " + time.strftime("%c")
+        print("=========== Airport run ways TWO =========== " + time.strftime("%c"))
 
         for runway in CharlesDeGaulle.getRunWays(runWaysDatabase):
-            print runway
+            print(runway)
 
 
 if __name__ == '__main__':
     unittest.main()
-    

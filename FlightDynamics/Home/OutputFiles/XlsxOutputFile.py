@@ -50,20 +50,14 @@ class XlsxOutput():
         
         self.filePath = fileName
         
-        self.FilesFolder = os.getcwd()
-        if not('Home' in self.FilesFolder):
-            self.FilesFolder = os.path.abspath(os.getcwd() + os.path.sep + 'Home' + os.path.sep + 'ResultsFiles')
-        else:
-            ''' case when the run is launched from Home/Tests '''
-            self.FilesFolder = os.path.abspath(os.getcwd() + os.path.sep  + '..' + os.path.sep  + 'ResultsFiles')
-
+        self.FilesFolder = os.path.dirname(__file__)
         
-        print self.className + ': file folder= {0}'.format(self.FilesFolder)
-        self.filePath = os.path.abspath(self.FilesFolder+ os.path.sep + self.filePath)
-        print self.className + ': file path= {0}'.format(self.filePath)
+        print(self.className + ': file folder= {0}'.format(self.FilesFolder))
+        self.filePath = os.path.abspath(self.FilesFolder + os.path.sep + ".." + os.path.sep + "ResultsFiles" + os.path.sep + self.filePath)
+        print(self.className + ': file path= {0}'.format(self.filePath))
 
         self.filePath = self.filePath + '-{0}.xlsx'.format(datetime.now().strftime("%d-%b-%Y-%Hh%Mm%S"))
-        print self.className + ': file path= {0}'.format(self.filePath)
+        print(self.className + ': file path= {0}'.format(self.filePath))
 
         self.workbook = xlsxwriter.Workbook(self.filePath)
         self.worksheet = self.workbook.add_worksheet(sheetName)
@@ -294,8 +288,7 @@ class XlsxOutput():
         ColumnIndex += 1
         self.worksheet.write(self.RowIndex, ColumnIndex, fifteenFloatValue)        
         self.RowIndex += 1    
-                                
-    
+
     def close(self):
         self.workbook.close()
     
@@ -310,7 +303,7 @@ class Test_XlsxOutputFile(unittest.TestCase):
                         firstFloatValue = 9.9,
                         secondFloatValue = 8.8)
         xlsxOutput.close()
-        
+
+
 if __name__ == '__main__':
     unittest.main()
-        

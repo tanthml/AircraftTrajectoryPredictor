@@ -96,7 +96,7 @@ class ClimbRamp(Graph):
         
         ''' from the run-way , we get the orientation or run-way true heading in degrees '''
         runWayOrientationDegrees = self.runway.getTrueHeadingDegrees()     
-        print self.className + ': run-way orientation degrees= ' + str(runWayOrientationDegrees) + ' degrees'
+        print(self.className + ': run-way orientation degrees= ' + str(runWayOrientationDegrees) + ' degrees')
                 
         ''' climb ramp length in meters '''
         ClimbSlopeLengthMeters = climbRampLengthNautics * OneNauticalMilesInMeters
@@ -168,14 +168,15 @@ class Test_ClimbRamp(unittest.TestCase):
         atmosphere = Atmosphere()
         earth = Earth()
         
-        print '==================== Three Degrees climb slope ==================== '+ time.strftime("%c")
+        print('==================== Three Degrees climb slope ==================== '+ time.strftime("%c"))
         acBd = BadaAircraftDatabase()
         aircraftICAOcode = 'A320'
+        aircraft = None
         if acBd.read():
             if ( acBd.aircraftExists(aircraftICAOcode) 
                  and acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
                 
-                print '==================== aircraft found  ==================== '+ time.strftime("%c")
+                print('==================== aircraft found  ==================== '+ time.strftime("%c"))
     
                 aircraft = BadaAircraft(
                                     ICAOcode = aircraftICAOcode,
@@ -187,11 +188,11 @@ class Test_ClimbRamp(unittest.TestCase):
         
         assert not(aircraft is None)
         
-        print '==================== get Charles Gaulle airport ==================== '+ time.strftime("%c")
+        print('==================== get Charles Gaulle airport ==================== '+ time.strftime("%c"))
         airportsDB = AirportsDatabase()
         assert(airportsDB.read())
         CharlesDeGaulle = airportsDB.getAirportFromICAOCode('LFPG')
-        print CharlesDeGaulle
+        print(CharlesDeGaulle)
         assert not(aircraft is None)
         
         aircraft.setTargetCruiseFlightLevel(RequestedFlightLevel = 390, 
@@ -199,23 +200,24 @@ class Test_ClimbRamp(unittest.TestCase):
     
      
         
-        print '==================== Three Degrees climb slope==================== '+ time.strftime("%c")
+        print('==================== Three Degrees climb slope==================== '+ time.strftime("%c"))
         runWaysDatabase = RunWayDataBase()
         if runWaysDatabase.read():
-            print 'runways DB correctly read'
+            print('runways DB correctly read')
         
         runway = runWaysDatabase.getFilteredRunWays('LFPG')
-        print runway
+        print(runway)
             
-        print '==================== Ground Run ==================== '+ time.strftime("%c")
+        print('==================== Ground Run ==================== '+ time.strftime("%c"))
         groundRun = GroundRunLeg(runway=runway, 
                                  aircraft=aircraft,
                                  airport=CharlesDeGaulle)
+        
         groundRun.buildDepartureGroundRun(deltaTimeSeconds = 0.1,
                                     elapsedTimeSeconds = 0.0,
                                     distanceStillToFlyMeters = 100000.0,
                                     distanceToLastFixMeters = 100000.0)
-        print '==================== Three Degrees climb slope==================== '+ time.strftime("%c")
+        print('==================== Three Degrees climb slope==================== '+ time.strftime("%c"))
     
         initialVertex = groundRun.getVertex(groundRun.getNumberOfVertices()-1)
         initialWayPoint = initialVertex.getWeight()
@@ -230,10 +232,11 @@ class Test_ClimbRamp(unittest.TestCase):
                            distanceStillToFlyMeters = 100000.0, 
                            distanceToLastFixMeters = 100000.0,
                            climbRampLengthNautics = 5.0 )
+        
         groundRun.addGraph(climbRamp)
         
         groundRun.createKmlOutputFile()
-        print "=========== ThreeDegreesGlideSlope end =========== " + time.strftime("%c")
+        print("=========== ThreeDegreesGlideSlope end =========== " + time.strftime("%c"))
     
 
 if __name__ == '__main__':

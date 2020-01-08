@@ -48,20 +48,20 @@ class Test_Route(unittest.TestCase):
         wayPointsDb = WayPointsDatabase()
         assert wayPointsDb.read()
             
-        t0 = time.clock()
-        print ' ========== Airports Direct Route testing ======= '
+        t0 = time.process_time()
+        print (' ========== Airports Direct Route testing ======= ')
         
         airportsDb = AirportsDatabase()
         assert  airportsDb.read()
-        t1 = time.clock()
-        print ' time to read airports database= {0:.2f} seconds'.format(t1-t0)
+        t1 = time.process_time()
+        print (' time to read airports database= {0:.2f} seconds'.format(t1-t0))
         
-        t2 = time.clock()
+        t2 = time.process_time()
         runwaysDb = RunWayDataBase()
         assert runwaysDb.read()
-        print ' time to read run-way database= {0:.2f} seconds'.format(t2-t1)
+        print (' time to read run-way database= {0:.2f} seconds'.format(t2-t1))
         
-        print ' ========== Airports Direct Route testing ======= '
+        print (' ========== Airports Direct Route testing ======= ')
         departureCountry = 'Japan'
         departureCountry = 'United Kingdom'
         departureCountry = 'France'
@@ -104,18 +104,18 @@ class Test_Route(unittest.TestCase):
                     if departureRunwayFound and arrivalRunwayFound:
                         distanceMeters = departureAirport.getDistanceMetersTo(arrivalAirport)
                         if  distanceMeters > 300000.0:
-                            print ' ========== Airports Direct Route testing ======= '
-                            print '{0} - {1} - distance  = {2} meters'.format(departureAirport.getName(), arrivalAirport.getName(), distanceMeters)
+                            print (' ========== Airports Direct Route testing ======= ')
+                            print ('{0} - {1} - distance  = {2} meters'.format(departureAirport.getName(), arrivalAirport.getName(), distanceMeters))
                 
-                            print departureAirport
-                            print arrivalAirport
+                            print (departureAirport)
+                            print (arrivalAirport)
                             routeFinder = RouteFinder()
                             if routeFinder.isConnected():    
                                 RFL = 'FL390'
                         
                                 if routeFinder.findRoute(departureAirport.getICAOcode(), arrivalAirport.getICAOcode(), RFL):
                                     routeList = routeFinder.getRouteAsList()
-                                    print routeList
+                                    print (routeList)
                                     routeFinder.insertWayPointsInDatabase(wayPointsDb)
                 
                                     strRoute = 'ADEP/' + departureAirport.getICAOcode() + '/' + departureRunwayName + '-'
@@ -123,7 +123,7 @@ class Test_Route(unittest.TestCase):
                                         strRoute += fix['Name'] + '-'
                                     strRoute += 'ADES/' + arrivalAirport.getICAOcode() + '/' + arrivalRunwayName
                                     
-                                    print strRoute
+                                    print (strRoute)
                                     
                                     flightPath = FlightPath(route = strRoute, 
                                                                 aircraftICAOcode = 'B744',
@@ -132,15 +132,15 @@ class Test_Route(unittest.TestCase):
                                                                 takeOffMassKilograms = 280000.0)
         
                                 
-                                    print "=========== Flight Plan compute  =========== " 
+                                    print ("=========== Flight Plan compute  =========== " )
                       
                                     t0 = time.clock()
-                                    print 'time zero= ' + str(t0)
+                                    print ('time zero= ' + str(t0))
                                     lengthNauticalMiles = flightPath.computeLengthNauticalMiles()
-                                    print 'flight path length= {0:.2f} nautics '.format(lengthNauticalMiles)
+                                    print ('flight path length= {0:.2f} nautics '.format(lengthNauticalMiles))
                                     flightPath.computeFlight(deltaTimeSeconds = 1.0)
-                                    print 'simulation duration= ' + str(time.clock()-t0) + ' seconds'
-                                    print "=========== Flight Plan create output files  =========== "
+                                    print ('simulation duration= ' + str(time.clock()-t0) + ' seconds')
+                                    print ("=========== Flight Plan create output files  =========== ")
                                     flightPath.createFlightOutputFiles()
                                     
                                     

@@ -50,6 +50,8 @@ VFR pour un vol VFR sans niveau de croisière déterminé à l’avance.
 feet2Meters = 0.3048 #meters
 Meters2Feet = 3.2808399
 
+from Home.Guidance.WayPointFile import WayPoint 
+
 def mayBeKnotsSpeedConstraint(fixIndex, fix):
     constraintFound = False
     levelConstraint = None
@@ -58,7 +60,7 @@ def mayBeKnotsSpeedConstraint(fixIndex, fix):
     speedKnots = str(fix[1:])
     if str(speedKnots).isdigit():
         ''' if rest of the string is digit then it is a speed constraint without any level constraint '''
-        print 'Constraints: speed constraint expressed as Knots= {0}'.format(speedKnots)
+        print('Constraints: speed constraint expressed as Knots= {0}'.format(speedKnots))
         speedConstraint = SpeedConstraint ( fixIndex = fixIndex , 
                                                     speed = speedKnots ,
                                                     units = 'knots')
@@ -73,13 +75,13 @@ def mayBeKnotsSpeedConstraint(fixIndex, fix):
             ''' there is level constraint '''
             speedKnots = str(subString[0:indexOfLevelConstraint])
             if str(speedKnots).isdigit():
-                print 'Constraints: speed constraint= {0} knots'.format(speedKnots)
+                print('Constraints: speed constraint= {0} knots'.format(speedKnots))
                 speedConstraint = SpeedConstraint(fixIndex = fixIndex , 
                                                           speed = speedKnots ,
                                                           units = 'knots')
                 constraintFound = True
                 levelFlightLevel = str(subString[indexOfLevelConstraint:])
-                print 'Constraints: level constraint= {0}'.format(levelFlightLevel)
+                print('Constraints: level constraint= {0}'.format(levelFlightLevel))
                 levelConstraint = LevelConstraint ( fixIndex = fixIndex,
                                                             level = str(levelFlightLevel[1:]),
                                                             units = 'FL')
@@ -95,14 +97,14 @@ def mayBeKnotsSpeedConstraint(fixIndex, fix):
                 ''' there is probably a level constraint '''
                 speedKnots = str(subString[1:indexOfLevelConstraint])
                 if str(speedKnots).isdigit():
-                    print 'Constraints: speed constraint= {0} knots'.format(speedKnots)
+                    print('Constraints: speed constraint= {0} knots'.format(speedKnots))
                     speedConstraint = SpeedConstraint(fixIndex = fixIndex , 
                                                               speed = speedKnots ,
                                                               units = 'knots')
                     constraintFound = True
 
                     levelAltitudeFeet = str(subString[indexOfLevelConstraint:])
-                    print 'Constraints: level constraint= {0}'.format(levelAltitudeFeet)
+                    print('Constraints: level constraint= {0}'.format(levelAltitudeFeet))
                 else:
                     ''' found an N, rest of the string are not digits but do not found neither a F nor a A => not a constraint '''
                     constraintFound = False
@@ -117,7 +119,7 @@ def mayBeMachSpeedConstraint(fixIndex, fix):
     speedMach = str(fix[1:])
     if str(speedMach).isdigit():
         ''' the rest of the string is composed only of digits => no other constraints '''
-        print 'Constraints: speed constraint expressed as Mach= {0}'.format(speedMach)
+        print('Constraints: speed constraint expressed as Mach= {0}'.format(speedMach))
         speedConstraint = SpeedConstraint ( fixIndex = fixIndex,
                                                     speed = speedMach,
                                                     units = 'mach')
@@ -132,13 +134,13 @@ def mayBeMachSpeedConstraint(fixIndex, fix):
             ''' there is level constraint '''
             speedKnots = str(subString[1:indexOfLevelConstraint])
             if str(speedKnots).isdigit():
-                print 'Constraints: speed constraint= {0} knots'.format(speedKnots)
+                print('Constraints: speed constraint= {0} knots'.format(speedKnots))
                 speedConstraint = SpeedConstraint ( fixIndex = fixIndex,
                                                             speed = speedKnots,
                                                             units = 'knots')
                         
                 levelFlightLevel = str(subString[indexOfLevelConstraint:])
-                print 'Constraints: level constraint= {0}'.format(levelFlightLevel)
+                print('Constraints: level constraint= {0}'.format(levelFlightLevel))
                 levelConstraint = LevelConstraint( fixIndex = fixIndex,
                                                            level = levelFlightLevel,
                                                            units = 'FL')
@@ -154,7 +156,7 @@ def mayBeMachSpeedConstraint(fixIndex, fix):
                     speedConstraint = SpeedConstraint ( fixIndex = fixIndex,
                                                             speed = speedMach,
                                                             units = 'mach')
-                    print 'Constraints : level constraint= {0}'.format(levelAltitudeFeet)
+                    print('Constraints : level constraint= {0}'.format(levelAltitudeFeet))
                     levelConstraint = LevelConstraint ( fixIndex = fixIndex ,
                                                                 level = levelAltitudeFeet,
                                                                 units = 'feet')
@@ -199,6 +201,16 @@ class ConstraintsApplicability(object):
     '''
 
 
+class ConstraintsManager(object):
+    constraintsList = []
+    
+    def __init__(self):
+        self.constraintsList = []
+        
+    def append(self, constraint):
+        self.constraintsList.append(constraint)
+
+
 class Constraints(object):
     ''' 
     the constraints class defines when a constraint becomes applicable 
@@ -213,7 +225,7 @@ class Constraints(object):
         
         ''' after take-off '''
         if fixIndex == 0:
-            print self.className + ' constraint is applicable after Take Off or first fix'
+            print(self.className + ' constraint is applicable after Take Off or first fix')
     
 class SpeedConstraint(Constraints):
     '''
@@ -235,18 +247,16 @@ class SpeedConstraint(Constraints):
         self.targetSpeedMach = 0.0
         if units == 'mach':
             self.targetSpeedMach = float( speed ) / 100.0
-            print self.className + ': speed constraints after fixIndex= {0} - speed= {1} - units= {2}'.format(self.fixIndex,
+            print(self.className + ': speed constraints after fixIndex= {0} - speed= {1} - units= {2}'.format(self.fixIndex,
                                                                                                          self.targetSpeedMach,
-                                                                                                         units)
+                                                                                                         units))
             
         elif units == 'knots':
             self.targetSpeedKnots = float(speed)
-            print self.className + ': speed constraints after fixIndex= {0} - speed= {1} - units= {2}'.format(self.fixIndex,
+            print(self.className + ': speed constraints after fixIndex= {0} - speed= {1} - units= {2}'.format(self.fixIndex,
                                                                                                          self.targetSpeedKnots,
-                                                                                                         units)
+                                                                                                         units))
             
-        
-
 class LevelConstraint(Constraints):
     
     def __init__(self, fixIndex, level , units ):
@@ -262,7 +272,32 @@ class LevelConstraint(Constraints):
         elif units == 'FL':
             self.targetLevelMeters = float(level) * 100.0 * feet2Meters
 
-        print self.className + ': level constraints after fixIndex= {0} - level= {1} meters - level= {2} feet'.format(self.fixIndex,
+        print(self.className + ': level constraints after fixIndex= {0} - level= {1} meters - level= {2} feet'.format(self.fixIndex,
                                                                                                          self.targetLevelMeters,
-                                                                                                         self.targetLevelMeters * Meters2Feet)
+                                                                                                         self.targetLevelMeters * Meters2Feet) )
 
+
+class ArrivalRunWayTouchDownConstraint(Constraints):
+
+    touchDownWayPoint = None
+    
+    def __init__(self, touchDownWayPoint):
+        
+        Constraints.__init__(self, fixIndex = -1)
+        print(self.className + ': add touch down constraint= {0}'.format(touchDownWayPoint))
+        
+        assert isinstance(touchDownWayPoint, WayPoint)
+        self.touchDownWayPoint = touchDownWayPoint
+
+
+class TargetApproachConstraint(Constraints):
+    
+    targetApproachWayPoint = None
+    
+    def __init__(self, targetApproachWayPoint):
+        
+        Constraints.__init__(self, fixIndex = -1)
+        print(self.className + ': add target approach way point constraint= {0}'.format(targetApproachWayPoint))
+        
+        assert isinstance(targetApproachWayPoint, WayPoint)
+        self.targetApproachWayPoint = targetApproachWayPoint
