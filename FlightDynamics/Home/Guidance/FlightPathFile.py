@@ -39,12 +39,14 @@ import json
 
 from Home.Environment.Atmosphere import Atmosphere
 from Home.Environment.Earth import Earth
-
-from Home.Guidance.ConstraintsFile import analyseConstraint
 from Home.Environment.WayPointsDatabaseFile import WayPointsDatabase
 from Home.Environment.AirportDatabaseFile import AirportsDatabase
 from Home.Environment.RunWaysDatabaseFile import RunWayDataBase
-from Home.Guidance.WayPointFile import WayPoint
+from Home.BadaAircraftPerformance.BadaAircraftDatabaseFile import BadaAircraftDatabase
+from Home.BadaAircraftPerformance.BadaAircraftFile import BadaAircraft
+from Home.Guidance.ConstraintsFile import analyseConstraint, \
+    ArrivalRunWayTouchDownConstraint, TargetApproachConstraint
+from Home.Guidance.WayPointFile import WayPoint, Airport
 from Home.Guidance.GraphFile import Graph, Edge
 from Home.Guidance.FlightPlanFile import FlightPlan
 from Home.Guidance.GroundRunLegFile import GroundRunLeg
@@ -52,11 +54,7 @@ from Home.Guidance.ClimbRampFile import ClimbRamp
 from Home.Guidance.TurnLegFile import TurnLeg
 from Home.Guidance.GreatCircleRouteFile import GreatCircleRoute
 from Home.Guidance.DescentGlideSlopeFile import DescentGlideSlope
-from Home.Guidance.WayPointFile import Airport
-from Home.Guidance.ConstraintsFile import ArrivalRunWayTouchDownConstraint, TargetApproachConstraint
 
-from Home.BadaAircraftPerformance.BadaAircraftDatabaseFile import BadaAircraftDatabase
-from Home.BadaAircraftPerformance.BadaAircraftFile import BadaAircraft
 
 Meter2Feet = 3.2808  # one meter equals 3.28 feet
 Meter2NauticalMiles = 0.000539956803  # One Meter = 0.0005 nautical miles

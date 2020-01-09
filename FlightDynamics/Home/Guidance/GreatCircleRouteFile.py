@@ -222,7 +222,7 @@ class GreatCircleRoute(Graph):
         return endOfSimulation
        
 
-class Test_Class(unittest.TestCase):
+class TestGreatCircleRoute(unittest.TestCase):
 
     def test_One(self):  
         
@@ -233,16 +233,20 @@ class Test_Class(unittest.TestCase):
         acBd = BadaAircraftDatabase()
         aircraftICAOcode = 'A320'
         if acBd.read():
-            if ( acBd.aircraftExists(aircraftICAOcode) 
+            if (acBd.aircraftExists(aircraftICAOcode)
                  and acBd.aircraftPerformanceFileExists(aircraftICAOcode)):
                 
                 print('==================== aircraft found  ==================== '+ time.strftime("%c"))
-                aircraft = BadaAircraft(ICAOcode = aircraftICAOcode, 
-                                            aircraftFullName = acBd.getAircraftFullName(aircraftICAOcode),
-                                            badaPerformanceFilePath = acBd.getAircraftPerformanceFile(aircraftICAOcode),
-                                            atmosphere = atmosphere,
-                                            earth = earth)
-                print ( aircraft )
+                aircraft = BadaAircraft(
+                    ICAOcode=aircraftICAOcode,
+                    aircraftFullName=acBd.getAircraftFullName(aircraftICAOcode),
+                    badaPerformanceFilePath=acBd.getAircraftPerformanceFile(aircraftICAOcode),
+                    atmosphere=atmosphere,
+                    earth=earth,
+                    windSpeedMetersPerSecond=None,
+                    windDirectionDegrees=None
+                )
+                print(aircraft)
                 assert not(aircraft is None)
             
         print('==================== departure airport ==================== '+ time.strftime("%c"))
@@ -332,7 +336,10 @@ class Test_Class(unittest.TestCase):
                                             aircraftFullName = acBd.getAircraftFullName(aircraftICAOcode),
                                             badaPerformanceFilePath = acBd.getAircraftPerformanceFile(aircraftICAOcode),
                                             atmosphere = atmosphere,
-                                            earth = earth)
+                                            earth = earth,
+                                            windSpeedMetersPerSecond=None,
+                                            windDirectionDegrees=None
+                                        )
                 print(aircraft)
         
         else:
@@ -408,6 +415,7 @@ class Test_Class(unittest.TestCase):
     
             greatCircle.createKmlOutputFile()
             greatCircle.createXlsxOutputFile()
-        
+
+
 if __name__ == '__main__':
     unittest.main()
