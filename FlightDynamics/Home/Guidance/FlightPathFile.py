@@ -129,83 +129,6 @@ class FlightPath(FlightPlan):
         self.departureAirport = self.getDepartureAirport()
         assert isinstance(self.departureAirport, Airport) and not (self.departureAirport is None)
 
-    def convertStrRouteToFixList(self, strRoute):
-        '''
-        from the route build a fix list and from the fix list build a way point list
-        '''
-        wayPointsDict = {}
-        wayPointsDb = WayPointsDatabase()
-        assert (wayPointsDb.read())
-
-        airportsDb = AirportsDatabase()
-        assert airportsDb.read()
-
-        runwaysDb = RunWayDataBase()
-        assert runwaysDb.read()
-
-        # print self.className + ': ================ get Fix List ================='
-        fixList = []
-        constraintsList = []
-        index = 0
-        for fix in strRoute.split('-'):
-            fix = str(fix).strip()
-            if str(fix).startswith('ADEP'):
-                if index == 0:
-                    if len(str(fix).split('/')) >= 2:
-                        departureAirportIcaoCode = str(fix).split('/')[1]
-                        departureAirport = airportsDb.getAirportFromICAOCode(ICAOcode=departureAirportIcaoCode)
-
-                    departureRunwayName = ''
-                    if len(str(fix).split('/')) >= 3:
-                        departureRunwayName = str(fix).split('/')[2]
-
-                    if not (self.departureAirport is None):
-                        departureRunway = runwaysDb.getFilteredRunWays(airportICAOcode=departureAirportIcaoCode,
-                                                                       runwayName=departureRunwayName)
-                else:
-                    raise ValueError(self.className + ': ADEP must be the first fix in the route!!!')
-
-
-            elif str(fix).startswith('ADES'):
-                if index == (len(strRoute.split('-')) - 1):
-                    if len(str(fix).split('/')) >= 2:
-                        arrivalAirportIcaoCode = str(fix).split('/')[1]
-                        arrivalAirport = airportsDb.getAirportFromICAOCode(ICAOcode=arrivalAirportIcaoCode)
-                    arrivalRunwayName = ''
-                    if len(str(fix).split('/')) >= 3:
-                        arrivalRunwayName = str(fix).split('/')[2]
-
-                    if not (arrivalAirport is None):
-                        arrivalRunway = runwaysDb.getFilteredRunWays(airportICAOcode=arrivalAirportIcaoCode,
-                                                                     runwayName=arrivalRunwayName)
-
-                else:
-                    raise ValueError(self.classeName + ': ADES must be the last fix of the route!!!')
-
-            else:
-                ''' do not take the 1st one (ADEP) and the last one (ADES) '''
-                constraintFound, levelConstraint, speedConstraint = analyseConstraint(index, fix)
-                # print self.className + ': constraint found= {0}'.format(constraintFound)
-                if constraintFound == True:
-                    constraint = {}
-                    constraint['fixIndex'] = index
-                    constraint['level'] = levelConstraint
-                    constraint['speed'] = speedConstraint
-                    constraintsList.append(constraint)
-                else:
-                    fixList.append(fix)
-                    wayPoint = wayPointsDb.getWayPoint(fix)
-                    if not (wayPoint is None):
-                        # print wayPoint
-                        wayPointsDict[fix] = wayPoint
-                    else:
-                        ''' do not insert way point names when there is no known latitude - longitude '''
-                        fixList.pop()
-
-            index += 1
-
-        return departureAirport, departureRunway, arrivalAirport, arrivalRunway, constraintsList, fixList, wayPointsDict
-
     def getAircraft(self):
 
         print(self.className + ': ================ get aircraft =================')
@@ -253,401 +176,6 @@ class FlightPath(FlightPlan):
                 elapsedTimeSeconds, hours, minutes, seconds)
 
         print(self.className + strMsg)
-
-    # compute distances between a consecutive pair in flight plan, in order
-    def computePairwiseDistances(self, fixes):
-        pairwiseDistances = []
-
-        for (prev, current) in pairwise(fixes):
-            origin, destination = self.wayPointsDict[prev], self.wayPointsDict[current]
-            distance = origin.getDistanceMetersTo(destination)
-            pairwiseDistances.append(distance)
-
-        return pairwiseDistances
-
-    def buildAircaft(self):
-        if (aircraftDb.aircraftExists(self.aircraftICAOcode) and
-                aircraftDb.aircraftPerformanceFileExists(self.aircraftICAOcode)):
-            aircraft = BadaAircraft(ICAOcode=self.aircraftICAOcode,
-                                    aircraftFullName=aircraftDb.getAircraftFullName(self.aircraftICAOcode),
-                                    badaPerformanceFilePath=aircraftDb.getAircraftPerformanceFile(
-                                        self.aircraftICAOcode),
-                                    atmosphere=atmosphere,
-                                    earth=earth,
-                                    windSpeedMetersPerSecond=self.windSpeedMetersPerSecond,
-                                    windDirectionDegrees=self.windDirectionDegrees
-            )
-            aircraft.setAircraftMassKilograms(self.takeOffMassKilograms)
-            assert self.RequestedFlightLevel >= 15.0 and self.RequestedFlightLevel <= 450.0
-            aircraft.setTargetCruiseFlightLevel(RequestedFlightLevel=self.RequestedFlightLevel,
-                                                departureAirportAltitudeMSLmeters=self.getDepartureAirport().getFieldElevationAboveSeaLevelMeters())
-            aircraft.setTargetCruiseMach(cruiseMachNumber=self.cruiseMach)
-
-            return aircraft
-
-        raise Exception("Invalid aircraft")
-
-    def depart(self, aircraft, fixes, deltaTimeSeconds=1):
-        wayPoints = [self.wayPointsDict[f] for f in fixes]
-        distances = self.computePairwiseDistances(fixes)
-
-        # DEPATURE
-        elapsedTimeSeconds = 0
-        finalRoute = GroundRunLeg(runway=self.departureRunway,
-                                  aircraft=aircraft,
-                                  airport=self.departureAirport)
-
-        distanceToLastFixMeters = self.departureAirport.getDistanceMetersTo(wayPoints[1]) + sum(distances[1:])
-        estimatedFlightLength = self.departureAirport.getDistanceMetersTo(wayPoints[0]) + sum(distances) + wayPoints[
-            -1].getDistanceMetersTo(self.arrivalAirport)
-        distanceStillToFlyMeters = estimatedFlightLength - finalRoute.getLengthMeters()
-
-        finalRoute.buildDepartureGroundRun(deltaTimeSeconds=deltaTimeSeconds,
-                                           elapsedTimeSeconds=elapsedTimeSeconds,
-                                           distanceStillToFlyMeters=distanceStillToFlyMeters,
-                                           distanceToLastFixMeters=distanceToLastFixMeters)
-        distanceStillToFlyMeters = estimatedFlightLength - finalRoute.getLengthMeters()
-
-        initialWayPoint = finalRoute.getLastVertex().getWeight()
-        distanceToFirstFixNautics = initialWayPoint.getDistanceMetersTo(self.getFirstWayPoint()) * Meter2NauticalMiles
-
-        climbRamp = ClimbRamp(initialWayPoint=initialWayPoint,
-                              runway=self.departureRunway,
-                              aircraft=aircraft,
-                              departureAirport=self.departureAirport)
-
-        climbRampLengthNautics = min(distanceToFirstFixNautics / 2.0, 5.0)
-        climbRamp.buildClimbRamp(deltaTimeSeconds=deltaTimeSeconds,
-                                 elapsedTimeSeconds=initialWayPoint.getElapsedTimeSeconds(),
-                                 distanceStillToFlyMeters=distanceStillToFlyMeters,
-                                 distanceToLastFixMeters=distanceToLastFixMeters,
-                                 climbRampLengthNautics=climbRampLengthNautics)
-        finalRoute.addGraph(climbRamp)
-
-        initialWayPoint = finalRoute.getLastVertex().getWeight()
-        lastLeg = finalRoute.getLastEdge()
-        initialHeadingDegrees = lastLeg.getBearingTailHeadDegrees()
-
-        return finalRoute, initialWayPoint, initialHeadingDegrees
-
-    def simulateArrival(self, aircraft, fixes, deltaTimeSeconds=1):
-        wayPoints = [self.wayPointsDict[f] for f in self.fixList]
-        distances = self.computePairwiseDistances(self.fixList)
-        constraints = []
-
-        # ARRIVAL
-        arrivalGroundRun = GroundRunLeg(runway=self.arrivalRunway,
-                                        aircraft=aircraft,
-                                        airport=self.arrivalAirport)
-
-        touchDownWayPoint = arrivalGroundRun.computeTouchDownWayPoint()
-        constraints.append(ArrivalRunWayTouchDownConstraint(touchDownWayPoint))
-
-        distanceToLastFixNautics = touchDownWayPoint.getDistanceMetersTo(wayPoints[-1]) * Meter2NauticalMiles
-        descentGlideSlope = DescentGlideSlope(runway=self.arrivalRunway,
-                                              aircraft=aircraft,
-                                              arrivalAirport=self.arrivalAirport,
-                                              descentGlideSlopeDegrees=3.0)
-
-        descentGlideSlopeSizeNautics = min(distanceToLastFixNautics / 2.0, 5.0)
-        descentGlideSlope.buildSimulatedGlideSlope(descentGlideSlopeSizeNautics)
-        firstGlideSlopeWayPoint = descentGlideSlope.getVertex(v=0).getWeight()
-        lastFixListWayPoint = wayPoints[-1]
-        initialHeadingDegrees = self.arrivalRunway.getTrueHeadingDegrees()
-
-        lastTurnLeg = TurnLeg(initialWayPoint=firstGlideSlopeWayPoint,
-                              finalWayPoint=lastFixListWayPoint,
-                              initialHeadingDegrees=initialHeadingDegrees,
-                              aircraft=aircraft,
-                              reverse=True)
-        lastTurnLeg.buildNewSimulatedArrivalTurnLeg(deltaTimeSeconds=deltaTimeSeconds,
-                                                    elapsedTimeSeconds=0.0,
-                                                    distanceStillToFlyMeters=0.0,
-                                                    simulatedAltitudeSeaLevelMeters=firstGlideSlopeWayPoint.getAltitudeMeanSeaLevelMeters(),
-                                                    flightPathAngleDegrees=3.0,
-                                                    bankAngleDegrees=5.0)
-        descentGlideSlope.addGraph(lastTurnLeg)
-
-        beginOfLastTurnLeg = lastTurnLeg.getVertex(v=0).getWeight()
-        constraints.append(TargetApproachConstraint(beginOfLastTurnLeg))
-
-        return beginOfLastTurnLeg, touchDownWayPoint, descentGlideSlope.getLengthMeters()
-
-    def flyFrom(self, aircraft, fixes, flightIndex, anticipatedTurnWayPoint, distanceStillToFlyMeters, lastLegEdge,
-                elapsedTimeSeconds, initialHeadingDegrees,
-                deltaTimeSeconds=1):
-        route = Graph()
-        route.addVertex(lastLegEdge)
-        justRoute = Graph()
-
-        endOfSimulation = False
-        last = None
-        finalHeadingDegrees = None
-
-        if (anticipatedTurnWayPoint is None):
-            fix = fixes[flightIndex]
-            tailWayPoint = self.wayPointsDict[fix]
-        else:
-            tailWayPoint = anticipatedTurnWayPoint
-
-        tailWayPoint.setElapsedTimeSeconds(elapsedTimeSeconds)
-        print(self.fixList, flightIndex)
-        if (flightIndex + 1) < len(fixes):
-            headWayPoint = self.wayPointsDict[fixes[flightIndex + 1]]
-            turnLeg = TurnLeg(initialWayPoint=tailWayPoint,
-                              finalWayPoint=headWayPoint,
-                              initialHeadingDegrees=initialHeadingDegrees,
-                              aircraft=aircraft,
-                              reverse=False)
-
-            distanceToLastFixMeters = self.computeDistanceToLastFixMeters(currentPosition=tailWayPoint,
-                                                                          fixListIndex=flightIndex)
-            endOfSimulation = turnLeg.buildTurnLeg(deltaTimeSeconds=deltaTimeSeconds,
-                                                   elapsedTimeSeconds=tailWayPoint.getElapsedTimeSeconds(),
-                                                   distanceStillToFlyMeters=distanceStillToFlyMeters,
-                                                   distanceToLastFixMeters=distanceToLastFixMeters)
-            route.addGraph(turnLeg)
-            justRoute.addGraph(turnLeg)
-
-            if (endOfSimulation == False):
-                endOfTurnLegWayPoint = route.getLastVertex().getWeight()
-                lastLeg = route.getLastEdge()
-
-                anticipatedTurnWayPoint = None
-                if (flightIndex + 2) < len(fixes):
-                    firstAngleDegrees = endOfTurnLegWayPoint.getBearingDegreesTo(headWayPoint)
-                    secondAngleDegrees = headWayPoint.getBearingDegreesTo(self.wayPointsDict[fixes[flightIndex + 2]])
-                    firstAngleRadians = math.radians(firstAngleDegrees)
-                    secondAngleRadians = math.radians(secondAngleDegrees)
-
-                    angleDifferenceDegrees = math.degrees(math.atan2(math.sin(secondAngleRadians - firstAngleRadians),
-                                                                     math.cos(secondAngleRadians - firstAngleRadians)))
-
-                    tasMetersPerSecond = aircraft.getCurrentTrueAirSpeedMetersSecond()
-                    radiusOfTurnMeters = (tasMetersPerSecond * tasMetersPerSecond) / (
-                            9.81 * math.tan(math.radians(15.0)))
-
-                    anticipatedTurnStartMeters = radiusOfTurnMeters * math.tan(
-                        math.radians((180.0 - abs(angleDifferenceDegrees)) / 2.0))
-
-                    if ((endOfTurnLegWayPoint.getDistanceMetersTo(headWayPoint) > (1.1 * anticipatedTurnStartMeters)
-                         and abs(angleDifferenceDegrees) > 30.)):
-                        bearingDegrees = math.fmod(firstAngleDegrees + 180.0, 360.0)
-                        anticipatedTurnWayPoint = headWayPoint.getWayPointAtDistanceBearing(
-                            Name='Anticipated-Turn-' + headWayPoint.getName(),
-                            DistanceMeters=anticipatedTurnStartMeters,
-                            BearingDegrees=bearingDegrees)
-                        headWayPoint = anticipatedTurnWayPoint
-
-                greatCircle = GreatCircleRoute(initialWayPoint=endOfTurnLegWayPoint,
-                                               finalWayPoint=headWayPoint,
-                                               aircraft=aircraft)
-
-                distanceToLastFixMeters = self.computeDistanceToLastFixMeters(currentPosition=endOfTurnLegWayPoint,
-                                                                              fixListIndex=flightIndex)
-
-                endOfSimulation = greatCircle.computeGreatCircle(deltaTimeSeconds=deltaTimeSeconds,
-                                                                 elapsedTimeSeconds=endOfTurnLegWayPoint.getElapsedTimeSeconds(),
-                                                                 distanceStillToFlyMeters=distanceStillToFlyMeters - route.getLengthMeters(),
-                                                                 distanceToLastFixMeters=distanceToLastFixMeters)
-                route.addGraph(greatCircle)
-                justRoute.addGraph(greatCircle)
-
-                finalWayPoint = route.getLastVertex().getWeight()
-                lastLeg = route.getLastEdge()
-                finalHeadingDegrees = lastLeg.getBearingTailHeadDegrees()
-                distanceStillToFlyMeters -= route.getLengthMeters()
-                elapsedTimeSeconds = finalWayPoint.getElapsedTimeSeconds()
-                last = route.getLastVertex().getWeight()
-
-                print("Initial heading degrees:", finalHeadingDegrees, lastLeg)
-        return endOfSimulation, anticipatedTurnWayPoint, distanceStillToFlyMeters, last, elapsedTimeSeconds, finalHeadingDegrees, justRoute
-
-    def arrive(self, aircraft, initialHeadingDegrees, endOfLastGreatCircleWayPoint, touchDownWayPoint, distanceStillToFlyMeters, flownDistance):
-        route = Graph()
-        route.addVertex(endOfLastGreatCircleWayPoint)
-        print(endOfLastGreatCircleWayPoint)
-        finalHeadingDegrees = self.arrivalRunway.getTrueHeadingDegrees()
-        finalHeadingDegrees = math.fmod(finalHeadingDegrees + 180.0, 360.0)
-
-        turnLeg = TurnLeg(initialWayPoint=endOfLastGreatCircleWayPoint,
-                          finalWayPoint= touchDownWayPoint,
-                          initialHeadingDegrees=initialHeadingDegrees,
-                          aircraft= aircraft,
-                          reverse=False)
-        distanceToLastFixMeters  = distanceStillToFlyMeters
-        deltaTimeSeconds = 0.1
-        turnLeg.buildTurnLeg(deltaTimeSeconds=deltaTimeSeconds,
-                             elapsedTimeSeconds=endOfLastGreatCircleWayPoint.getElapsedTimeSeconds(),
-                             distanceStillToFlyMeters=distanceStillToFlyMeters,
-                             distanceToLastFixMeters=distanceToLastFixMeters,
-                             finalHeadingDegrees=finalHeadingDegrees,
-                             lastTurn=True,
-                             bankAngleDegrees=5.0)
-        route.addGraph(turnLeg)
-
-        endOfTurnLegWayPoint = route.getLastVertex().getWeight()
-        descentGlideSlope = DescentGlideSlope(runway=self.arrivalRunway,
-                                              aircraft=aircraft,
-                                              arrivalAirport=self.arrivalAirport,
-                                              descentGlideSlopeDegrees=3.0)
-
-        flownDistanceMeters = flownDistance + route.getLengthMeters()
-
-        distanceStillToFlyMeters = distanceStillToFlyMeters - route.getLengthMeters()
-        distanceToLastFixMeters = distanceStillToFlyMeters
-
-        descentGlideSlope.buildGlideSlope(deltaTimeSeconds=self.deltaTimeSeconds,
-                                          elapsedTimeSeconds=endOfTurnLegWayPoint.getElapsedTimeSeconds(),
-                                          initialWayPoint=endOfTurnLegWayPoint,
-                                          flownDistanceMeters=flownDistanceMeters,
-                                          distanceStillToFlyMeters=distanceStillToFlyMeters,
-                                          distanceToLastFixMeters=distanceToLastFixMeters)
-        route.addGraph(descentGlideSlope)
-        endOfDescentGlideSlope = route.getLastVertex().getWeight()
-
-        arrivalGroundRun = GroundRunLeg(runway=self.arrivalRunway,
-                                        aircraft=aircraft,
-                                        airport=self.arrivalAirport)
-        arrivalGroundRun.buildArrivalGroundRun(deltaTimeSeconds=self.deltaTimeSeconds,
-                                               elapsedTimeSeconds=endOfDescentGlideSlope.getElapsedTimeSeconds(),
-                                               initialWayPoint=endOfDescentGlideSlope)
-        route.addGraph(arrivalGroundRun)
-        return route
-
-    def simulateFly(self, startFrom, flightPath, updatedSpeed=None, updatedAltitude=None):
-        _, _, _, _, _, fixes, wayPointsDict = self.convertStrRouteToFixList(flightPath)
-
-        with open('configurations.json', 'r') as f:
-            configurations = json.load(f)
-            configuration = configurations[startFrom]
-
-            aircraftConfig = configuration['aircraft']
-            departedAircraft = self.buildAircaft()
-            finalRoute, initialWayPoint, initialHeadingDegrees = self.depart(departedAircraft, self.fixList,
-                                                                             deltaTimeSeconds=1)
-            beginOfLastTurnLeg, touchDownWayPoint, descentGlideSlopeLength = self.simulateArrival(departedAircraft,
-                                                                                                  self.fixList)
-            fixes = [initialWayPoint.Name] + fixes + [beginOfLastTurnLeg.Name]
-            wayPointsDict[initialWayPoint.Name] = initialWayPoint
-            wayPointsDict[beginOfLastTurnLeg.Name] = beginOfLastTurnLeg
-
-            # Recover the aircraft
-            aircraft = self.buildAircaft()
-            elapsedTimeSeconds = list(aircraftConfig.keys())[0]
-            state = aircraftConfig[elapsedTimeSeconds]
-            aircraft.updateAircraftStateVector(elapsedTimeSeconds,
-                                               updatedSpeed or state[1],
-                                               updatedAltitude or state[0],
-                                               state[2],
-                                               state[3],
-                                               state[4],
-                                               state[5],
-                                               state[6],
-                                               state[7],
-                                               state[8],
-                                               False)
-            aircraft.setAircraftMassKilograms(state[4])
-            aircraft.setTargetApproachWayPoint(beginOfLastTurnLeg)
-            aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
-            aircraft.aircraftCurrentConfiguration = 'cruise'
-            last = None
-
-            if configuration['previousVertex']:
-                lastVertex = configuration['previousVertex']
-                last = WayPoint(
-                    Name=lastVertex['Name'],
-                    LatitudeDegrees=lastVertex['LatitudeDegrees'],
-                    LongitudeDegrees=lastVertex['LongitudeDegrees'],
-                    AltitudeMeanSeaLevelMeters=lastVertex['AltitudeMeanSeaLevelMeters']
-                )
-            self.wayPointsDict = wayPointsDict
-            self.fixList = fixes
-            fRoute = Graph()
-            wayPoints = [wayPointsDict[f] for f in fixes]
-            distances = self.computePairwiseDistances(fixes)
-            flightLength = self.departureAirport.getDistanceMetersTo(wayPoints[0]) + sum(distances) + wayPoints[
-                -1].getDistanceMetersTo(self.arrivalAirport) + descentGlideSlopeLength
-            distanceStillToFlyMeters = flightLength - configuration['flownDistance']
-            elapsedTimeSeconds = configuration['elapsedTimeSeconds']
-            initialHeadingDegrees = configuration['initialHeadingDegrees']
-            endOfSimulation = False
-            flightIndex = startFrom
-            anticipatedTurnWayPoint = None
-
-            while (endOfSimulation == False) and (flightIndex < len(fixes) - 1):
-                endOfSimulation, anticipatedTurnWayPoint, distanceStillToFlyMeters, last, elapsedTimeSeconds, initialHeadingDegrees, route = self.flyFrom(
-                    aircraft, fixes, flightIndex, anticipatedTurnWayPoint, distanceStillToFlyMeters, last,
-                    elapsedTimeSeconds, initialHeadingDegrees
-                )
-                fRoute.addGraph(route)
-                finalRoute.addGraph(route)
-                flightIndex += 1
-
-            route = self.arrive(aircraft, initialHeadingDegrees, fRoute.getLastVertex().getWeight(), touchDownWayPoint, distanceStillToFlyMeters, flightLength)
-            fRoute.addGraph(route)
-            fRoute.createXlsxOutputFile()
-
-    def fly(self, deltaTimeSeconds=1):
-        configurations = []
-
-        constraints = []
-        fixes = self.fixList
-        aircraft = self.buildAircaft()
-        finalRoute, initialWayPoint, initialHeadingDegrees = self.depart(aircraft, fixes, deltaTimeSeconds)
-        beginOfLastTurnLeg, touchDownWayPoint, descentGlideSlopeLength = self.simulateArrival(aircraft, fixes,
-                                                                                              deltaTimeSeconds)
-
-        self.insert(position='begin', wayPoint=initialWayPoint)
-        self.insert(position='end', wayPoint=beginOfLastTurnLeg)
-        aircraft.setTargetApproachWayPoint(beginOfLastTurnLeg)
-        aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
-
-        wayPoints = [self.wayPointsDict[f] for f in self.fixList]
-        distances = self.computePairwiseDistances(self.fixList)
-        flightLength = self.departureAirport.getDistanceMetersTo(wayPoints[0]) + sum(distances) + wayPoints[
-            -1].getDistanceMetersTo(self.arrivalAirport) + descentGlideSlopeLength
-
-        anticipatedTurnWayPoint = None
-        elapsedTimeSeconds = initialWayPoint.getElapsedTimeSeconds()
-        flightIndex = 0
-        endOfSimulation = False
-        last = finalRoute.getLastVertex().getWeight()
-        distanceStillToFlyMeters = flightLength - finalRoute.getLengthMeters()
-
-        while (endOfSimulation == False) and (flightIndex < len(self.fixList)):
-            previousVertex = {
-                'Name': last.Name,
-                'LatitudeDegrees': last.LatitudeDegrees,
-                'LongitudeDegrees': last.LongitudeDegrees,
-                'AltitudeMeanSeaLevelMeters': last.AltitudeMeanSeaLevelMeters
-            } if last else None
-            anticipatedTurnWayPointObj = {
-                'Name': anticipatedTurnWayPoint.Name,
-                'LatitudeDegrees': anticipatedTurnWayPoint.LatitudeDegrees,
-                'LongitudeDegrees': anticipatedTurnWayPoint.LongitudeDegrees,
-                'AltitudeMeanSeaLevelMeters': anticipatedTurnWayPoint.AltitudeMeanSeaLevelMeters
-            } if anticipatedTurnWayPoint else None
-            configurations.append({
-                'aircraft': aircraft.StateVector.aircraftStateHistory[-1],
-                'index': flightIndex,
-                'anticipatedTurnWayPoint': anticipatedTurnWayPointObj,
-                'previousVertex': previousVertex,
-                'elapsedTimeSeconds': elapsedTimeSeconds,
-                'initialHeadingDegrees': initialHeadingDegrees,
-                'flownDistance': flightLength - distanceStillToFlyMeters
-            })
-
-            endOfSimulation, anticipatedTurnWayPoint, distanceStillToFlyMeters, last, elapsedTimeSeconds, initialHeadingDegrees, _ = self.flyFrom(
-                aircraft, self.fixList, flightIndex, anticipatedTurnWayPoint, distanceStillToFlyMeters, last,
-                elapsedTimeSeconds, initialHeadingDegrees,
-                deltaTimeSeconds=1
-            )
-
-            flightIndex += 1
-
-        with open('configurations.json', 'w') as f:
-            json.dump(configurations, f)
 
     def turnAndFly(self,
                    tailWayPoint,
@@ -1005,8 +533,10 @@ class FlightPath(FlightPlan):
 
         #print '==================== Loop over the fix list ==================== '
 
-        endOfSimulation, initialHeadingDegrees = self.loopThroughFixList(initialHeadingDegrees = initialHeadingDegrees,
-                                                        elapsedTimeSeconds = initialWayPoint.getElapsedTimeSeconds())
+        endOfSimulation, initialHeadingDegrees = self.loopThroughFixList(
+            initialHeadingDegrees=initialHeadingDegrees,
+            elapsedTimeSeconds=initialWayPoint.getElapsedTimeSeconds()
+        )
 
         if (endOfSimulation == False):
             #print '=========== build arrival phase =============='
@@ -1034,3 +564,480 @@ class FlightPath(FlightPlan):
         # self.aircraft.createStateVectorOutputFile(filePrefix)
         print(self.className + ': final route length= {0} nautics'.format(
             self.finalRoute.getLengthMeters() * Meter2NauticalMiles))
+
+    """
+    THE LINES OF CODE BELOW WAS ADDED BY HA.LE, FOR FLIGHT SIMULATION 
+    FROM WAYPOINT, WITH WIND INFORMATION.
+    """
+
+    def convertStrRouteToFixList(self, strRoute):
+        '''
+        from the route build a fix list and from the fix list build a way point list
+        '''
+        wayPointsDict = {}
+        wayPointsDb = WayPointsDatabase()
+        assert (wayPointsDb.read())
+
+        airportsDb = AirportsDatabase()
+        assert airportsDb.read()
+
+        runwaysDb = RunWayDataBase()
+        assert runwaysDb.read()
+
+        # print self.className + ': ================ get Fix List ================='
+        fixList = []
+        constraintsList = []
+        index = 0
+        for fix in strRoute.split('-'):
+            fix = str(fix).strip()
+            if str(fix).startswith('ADEP'):
+                if index == 0:
+                    if len(str(fix).split('/')) >= 2:
+                        departureAirportIcaoCode = str(fix).split('/')[1]
+                        departureAirport = airportsDb.getAirportFromICAOCode(ICAOcode=departureAirportIcaoCode)
+
+                    departureRunwayName = ''
+                    if len(str(fix).split('/')) >= 3:
+                        departureRunwayName = str(fix).split('/')[2]
+
+                    if not (self.departureAirport is None):
+                        departureRunway = runwaysDb.getFilteredRunWays(airportICAOcode=departureAirportIcaoCode,
+                                                                       runwayName=departureRunwayName)
+                else:
+                    raise ValueError(self.className + ': ADEP must be the first fix in the route!!!')
+
+
+            elif str(fix).startswith('ADES'):
+                if index == (len(strRoute.split('-')) - 1):
+                    if len(str(fix).split('/')) >= 2:
+                        arrivalAirportIcaoCode = str(fix).split('/')[1]
+                        arrivalAirport = airportsDb.getAirportFromICAOCode(ICAOcode=arrivalAirportIcaoCode)
+                    arrivalRunwayName = ''
+                    if len(str(fix).split('/')) >= 3:
+                        arrivalRunwayName = str(fix).split('/')[2]
+
+                    if not (arrivalAirport is None):
+                        arrivalRunway = runwaysDb.getFilteredRunWays(airportICAOcode=arrivalAirportIcaoCode,
+                                                                     runwayName=arrivalRunwayName)
+
+                else:
+                    raise ValueError(self.classeName + ': ADES must be the last fix of the route!!!')
+
+            else:
+                ''' do not take the 1st one (ADEP) and the last one (ADES) '''
+                constraintFound, levelConstraint, speedConstraint = analyseConstraint(index, fix)
+                # print self.className + ': constraint found= {0}'.format(constraintFound)
+                if constraintFound == True:
+                    constraint = {}
+                    constraint['fixIndex'] = index
+                    constraint['level'] = levelConstraint
+                    constraint['speed'] = speedConstraint
+                    constraintsList.append(constraint)
+                else:
+                    fixList.append(fix)
+                    wayPoint = wayPointsDb.getWayPoint(fix)
+                    if not (wayPoint is None):
+                        # print wayPoint
+                        wayPointsDict[fix] = wayPoint
+                    else:
+                        ''' do not insert way point names when there is no known latitude - longitude '''
+                        fixList.pop()
+
+            index += 1
+
+        return departureAirport, departureRunway, arrivalAirport, arrivalRunway, constraintsList, fixList, wayPointsDict
+
+    # compute distances between a consecutive pair in flight plan, in order
+    def computePairwiseDistances(self, fixes):
+        pairwiseDistances = []
+
+        for (prev, current) in pairwise(fixes):
+            origin, destination = self.wayPointsDict[prev], self.wayPointsDict[current]
+            distance = origin.getDistanceMetersTo(destination)
+            pairwiseDistances.append(distance)
+
+        return pairwiseDistances
+
+    def buildAircaft(self):
+        if (aircraftDb.aircraftExists(self.aircraftICAOcode) and
+                aircraftDb.aircraftPerformanceFileExists(self.aircraftICAOcode)):
+            aircraft = BadaAircraft(ICAOcode=self.aircraftICAOcode,
+                                    aircraftFullName=aircraftDb.getAircraftFullName(self.aircraftICAOcode),
+                                    badaPerformanceFilePath=aircraftDb.getAircraftPerformanceFile(
+                                        self.aircraftICAOcode),
+                                    atmosphere=atmosphere,
+                                    earth=earth,
+                                    windSpeedMetersPerSecond=self.windSpeedMetersPerSecond,
+                                    windDirectionDegrees=self.windDirectionDegrees
+            )
+            aircraft.setAircraftMassKilograms(self.takeOffMassKilograms)
+            assert self.RequestedFlightLevel >= 15.0 and self.RequestedFlightLevel <= 450.0
+            aircraft.setTargetCruiseFlightLevel(RequestedFlightLevel=self.RequestedFlightLevel,
+                                                departureAirportAltitudeMSLmeters=self.getDepartureAirport().getFieldElevationAboveSeaLevelMeters())
+            aircraft.setTargetCruiseMach(cruiseMachNumber=self.cruiseMach)
+
+            return aircraft
+
+        raise Exception("Invalid aircraft")
+
+    def depart(self, aircraft, fixes, deltaTimeSeconds=1):
+        wayPoints = [self.wayPointsDict[f] for f in fixes]
+        distances = self.computePairwiseDistances(fixes)
+
+        # DEPATURE
+        elapsedTimeSeconds = 0
+        finalRoute = GroundRunLeg(runway=self.departureRunway,
+                                  aircraft=aircraft,
+                                  airport=self.departureAirport)
+
+        distanceToLastFixMeters = self.departureAirport.getDistanceMetersTo(wayPoints[1]) + sum(distances[1:])
+        estimatedFlightLength = self.departureAirport.getDistanceMetersTo(wayPoints[0]) + sum(distances) + wayPoints[
+            -1].getDistanceMetersTo(self.arrivalAirport)
+        distanceStillToFlyMeters = estimatedFlightLength - finalRoute.getLengthMeters()
+
+        finalRoute.buildDepartureGroundRun(deltaTimeSeconds=deltaTimeSeconds,
+                                           elapsedTimeSeconds=elapsedTimeSeconds,
+                                           distanceStillToFlyMeters=distanceStillToFlyMeters,
+                                           distanceToLastFixMeters=distanceToLastFixMeters)
+        distanceStillToFlyMeters = estimatedFlightLength - finalRoute.getLengthMeters()
+
+        initialWayPoint = finalRoute.getLastVertex().getWeight()
+        distanceToFirstFixNautics = initialWayPoint.getDistanceMetersTo(self.getFirstWayPoint()) * Meter2NauticalMiles
+
+        climbRamp = ClimbRamp(initialWayPoint=initialWayPoint,
+                              runway=self.departureRunway,
+                              aircraft=aircraft,
+                              departureAirport=self.departureAirport)
+
+        climbRampLengthNautics = min(distanceToFirstFixNautics / 2.0, 5.0)
+        climbRamp.buildClimbRamp(deltaTimeSeconds=deltaTimeSeconds,
+                                 elapsedTimeSeconds=initialWayPoint.getElapsedTimeSeconds(),
+                                 distanceStillToFlyMeters=distanceStillToFlyMeters,
+                                 distanceToLastFixMeters=distanceToLastFixMeters,
+                                 climbRampLengthNautics=climbRampLengthNautics)
+        finalRoute.addGraph(climbRamp)
+
+        initialWayPoint = finalRoute.getLastVertex().getWeight()
+        lastLeg = finalRoute.getLastEdge()
+        initialHeadingDegrees = lastLeg.getBearingTailHeadDegrees()
+
+        return finalRoute, initialWayPoint, initialHeadingDegrees
+
+    def simulateArrival(self, aircraft, fixes, deltaTimeSeconds=1):
+        wayPoints = [self.wayPointsDict[f] for f in self.fixList]
+        distances = self.computePairwiseDistances(self.fixList)
+        constraints = []
+
+        # ARRIVAL
+        arrivalGroundRun = GroundRunLeg(runway=self.arrivalRunway,
+                                        aircraft=aircraft,
+                                        airport=self.arrivalAirport)
+
+        touchDownWayPoint = arrivalGroundRun.computeTouchDownWayPoint()
+        constraints.append(ArrivalRunWayTouchDownConstraint(touchDownWayPoint))
+
+        distanceToLastFixNautics = touchDownWayPoint.getDistanceMetersTo(wayPoints[-1]) * Meter2NauticalMiles
+        descentGlideSlope = DescentGlideSlope(runway=self.arrivalRunway,
+                                              aircraft=aircraft,
+                                              arrivalAirport=self.arrivalAirport,
+                                              descentGlideSlopeDegrees=3.0)
+
+        descentGlideSlopeSizeNautics = min(distanceToLastFixNautics / 2.0, 5.0)
+        descentGlideSlope.buildSimulatedGlideSlope(descentGlideSlopeSizeNautics)
+        firstGlideSlopeWayPoint = descentGlideSlope.getVertex(v=0).getWeight()
+        lastFixListWayPoint = wayPoints[-1]
+        initialHeadingDegrees = self.arrivalRunway.getTrueHeadingDegrees()
+
+        lastTurnLeg = TurnLeg(initialWayPoint=firstGlideSlopeWayPoint,
+                              finalWayPoint=lastFixListWayPoint,
+                              initialHeadingDegrees=initialHeadingDegrees,
+                              aircraft=aircraft,
+                              reverse=True)
+        lastTurnLeg.buildNewSimulatedArrivalTurnLeg(deltaTimeSeconds=deltaTimeSeconds,
+                                                    elapsedTimeSeconds=0.0,
+                                                    distanceStillToFlyMeters=0.0,
+                                                    simulatedAltitudeSeaLevelMeters=firstGlideSlopeWayPoint.getAltitudeMeanSeaLevelMeters(),
+                                                    flightPathAngleDegrees=3.0,
+                                                    bankAngleDegrees=5.0)
+        descentGlideSlope.addGraph(lastTurnLeg)
+
+        beginOfLastTurnLeg = lastTurnLeg.getVertex(v=0).getWeight()
+        constraints.append(TargetApproachConstraint(beginOfLastTurnLeg))
+
+        return beginOfLastTurnLeg, touchDownWayPoint, descentGlideSlope.getLengthMeters()
+
+    def flyFrom(self, aircraft, fixes, flightIndex, anticipatedTurnWayPoint, distanceStillToFlyMeters, lastLegEdge,
+                elapsedTimeSeconds, initialHeadingDegrees,
+                deltaTimeSeconds=1):
+        route = Graph()
+        route.addVertex(lastLegEdge)
+        justRoute = Graph()
+
+        endOfSimulation = False
+        last = None
+        finalHeadingDegrees = None
+
+        if (anticipatedTurnWayPoint is None):
+            fix = fixes[flightIndex]
+            tailWayPoint = self.wayPointsDict[fix]
+        else:
+            tailWayPoint = anticipatedTurnWayPoint
+
+        tailWayPoint.setElapsedTimeSeconds(elapsedTimeSeconds)
+        print(self.fixList, flightIndex)
+        if (flightIndex + 1) < len(fixes):
+            headWayPoint = self.wayPointsDict[fixes[flightIndex + 1]]
+            turnLeg = TurnLeg(initialWayPoint=tailWayPoint,
+                              finalWayPoint=headWayPoint,
+                              initialHeadingDegrees=initialHeadingDegrees,
+                              aircraft=aircraft,
+                              reverse=False)
+
+            distanceToLastFixMeters = self.computeDistanceToLastFixMeters(currentPosition=tailWayPoint,
+                                                                          fixListIndex=flightIndex)
+            endOfSimulation = turnLeg.buildTurnLeg(deltaTimeSeconds=deltaTimeSeconds,
+                                                   elapsedTimeSeconds=tailWayPoint.getElapsedTimeSeconds(),
+                                                   distanceStillToFlyMeters=distanceStillToFlyMeters,
+                                                   distanceToLastFixMeters=distanceToLastFixMeters)
+            route.addGraph(turnLeg)
+            justRoute.addGraph(turnLeg)
+
+            if (endOfSimulation == False):
+                endOfTurnLegWayPoint = route.getLastVertex().getWeight()
+                lastLeg = route.getLastEdge()
+
+                anticipatedTurnWayPoint = None
+                if (flightIndex + 2) < len(fixes):
+                    firstAngleDegrees = endOfTurnLegWayPoint.getBearingDegreesTo(headWayPoint)
+                    secondAngleDegrees = headWayPoint.getBearingDegreesTo(self.wayPointsDict[fixes[flightIndex + 2]])
+                    firstAngleRadians = math.radians(firstAngleDegrees)
+                    secondAngleRadians = math.radians(secondAngleDegrees)
+
+                    angleDifferenceDegrees = math.degrees(math.atan2(math.sin(secondAngleRadians - firstAngleRadians),
+                                                                     math.cos(secondAngleRadians - firstAngleRadians)))
+
+                    tasMetersPerSecond = aircraft.getCurrentTrueAirSpeedMetersSecond()
+                    radiusOfTurnMeters = (tasMetersPerSecond * tasMetersPerSecond) / (
+                            9.81 * math.tan(math.radians(15.0)))
+
+                    anticipatedTurnStartMeters = radiusOfTurnMeters * math.tan(
+                        math.radians((180.0 - abs(angleDifferenceDegrees)) / 2.0))
+
+                    if ((endOfTurnLegWayPoint.getDistanceMetersTo(headWayPoint) > (1.1 * anticipatedTurnStartMeters)
+                         and abs(angleDifferenceDegrees) > 30.)):
+                        bearingDegrees = math.fmod(firstAngleDegrees + 180.0, 360.0)
+                        anticipatedTurnWayPoint = headWayPoint.getWayPointAtDistanceBearing(
+                            Name='Anticipated-Turn-' + headWayPoint.getName(),
+                            DistanceMeters=anticipatedTurnStartMeters,
+                            BearingDegrees=bearingDegrees)
+                        headWayPoint = anticipatedTurnWayPoint
+
+                greatCircle = GreatCircleRoute(initialWayPoint=endOfTurnLegWayPoint,
+                                               finalWayPoint=headWayPoint,
+                                               aircraft=aircraft)
+
+                distanceToLastFixMeters = self.computeDistanceToLastFixMeters(currentPosition=endOfTurnLegWayPoint,
+                                                                              fixListIndex=flightIndex)
+
+                endOfSimulation = greatCircle.computeGreatCircle(deltaTimeSeconds=deltaTimeSeconds,
+                                                                 elapsedTimeSeconds=endOfTurnLegWayPoint.getElapsedTimeSeconds(),
+                                                                 distanceStillToFlyMeters=distanceStillToFlyMeters - route.getLengthMeters(),
+                                                                 distanceToLastFixMeters=distanceToLastFixMeters)
+                route.addGraph(greatCircle)
+                justRoute.addGraph(greatCircle)
+
+                finalWayPoint = route.getLastVertex().getWeight()
+                lastLeg = route.getLastEdge()
+                finalHeadingDegrees = lastLeg.getBearingTailHeadDegrees()
+                distanceStillToFlyMeters -= route.getLengthMeters()
+                elapsedTimeSeconds = finalWayPoint.getElapsedTimeSeconds()
+                last = route.getLastVertex().getWeight()
+
+                print("Initial heading degrees:", finalHeadingDegrees, lastLeg)
+        return endOfSimulation, anticipatedTurnWayPoint, distanceStillToFlyMeters, last, elapsedTimeSeconds, finalHeadingDegrees, justRoute
+
+    def arrive(self, aircraft, initialHeadingDegrees, endOfLastGreatCircleWayPoint, touchDownWayPoint, distanceStillToFlyMeters, flownDistance):
+        route = Graph()
+        route.addVertex(endOfLastGreatCircleWayPoint)
+        print(endOfLastGreatCircleWayPoint)
+        finalHeadingDegrees = self.arrivalRunway.getTrueHeadingDegrees()
+        finalHeadingDegrees = math.fmod(finalHeadingDegrees + 180.0, 360.0)
+
+        turnLeg = TurnLeg(initialWayPoint=endOfLastGreatCircleWayPoint,
+                          finalWayPoint= touchDownWayPoint,
+                          initialHeadingDegrees=initialHeadingDegrees,
+                          aircraft= aircraft,
+                          reverse=False)
+        distanceToLastFixMeters  = distanceStillToFlyMeters
+        deltaTimeSeconds = 0.1
+        turnLeg.buildTurnLeg(deltaTimeSeconds=deltaTimeSeconds,
+                             elapsedTimeSeconds=endOfLastGreatCircleWayPoint.getElapsedTimeSeconds(),
+                             distanceStillToFlyMeters=distanceStillToFlyMeters,
+                             distanceToLastFixMeters=distanceToLastFixMeters,
+                             finalHeadingDegrees=finalHeadingDegrees,
+                             lastTurn=True,
+                             bankAngleDegrees=5.0)
+        route.addGraph(turnLeg)
+
+        endOfTurnLegWayPoint = route.getLastVertex().getWeight()
+        descentGlideSlope = DescentGlideSlope(runway=self.arrivalRunway,
+                                              aircraft=aircraft,
+                                              arrivalAirport=self.arrivalAirport,
+                                              descentGlideSlopeDegrees=3.0)
+
+        flownDistanceMeters = flownDistance + route.getLengthMeters()
+
+        distanceStillToFlyMeters = distanceStillToFlyMeters - route.getLengthMeters()
+        distanceToLastFixMeters = distanceStillToFlyMeters
+
+        descentGlideSlope.buildGlideSlope(deltaTimeSeconds=self.deltaTimeSeconds,
+                                          elapsedTimeSeconds=endOfTurnLegWayPoint.getElapsedTimeSeconds(),
+                                          initialWayPoint=endOfTurnLegWayPoint,
+                                          flownDistanceMeters=flownDistanceMeters,
+                                          distanceStillToFlyMeters=distanceStillToFlyMeters,
+                                          distanceToLastFixMeters=distanceToLastFixMeters)
+        route.addGraph(descentGlideSlope)
+        endOfDescentGlideSlope = route.getLastVertex().getWeight()
+
+        arrivalGroundRun = GroundRunLeg(runway=self.arrivalRunway,
+                                        aircraft=aircraft,
+                                        airport=self.arrivalAirport)
+        arrivalGroundRun.buildArrivalGroundRun(deltaTimeSeconds=self.deltaTimeSeconds,
+                                               elapsedTimeSeconds=endOfDescentGlideSlope.getElapsedTimeSeconds(),
+                                               initialWayPoint=endOfDescentGlideSlope)
+        route.addGraph(arrivalGroundRun)
+        return route
+
+    def simulateFly(self, startFrom, flightPath, updatedSpeed=None, updatedAltitude=None):
+        _, _, _, _, _, fixes, wayPointsDict = self.convertStrRouteToFixList(flightPath)
+
+        with open('configurations.json', 'r') as f:
+            configurations = json.load(f)
+            configuration = configurations[startFrom]
+
+            aircraftConfig = configuration['aircraft']
+            departedAircraft = self.buildAircaft()
+            finalRoute, initialWayPoint, initialHeadingDegrees = self.depart(departedAircraft, self.fixList,
+                                                                             deltaTimeSeconds=1)
+            beginOfLastTurnLeg, touchDownWayPoint, descentGlideSlopeLength = self.simulateArrival( departedAircraft,
+                                                                                                  self.fixList)
+            fixes = [initialWayPoint.Name] + fixes + [beginOfLastTurnLeg.Name]
+            wayPointsDict[initialWayPoint.Name] = initialWayPoint
+            wayPointsDict[beginOfLastTurnLeg.Name] = beginOfLastTurnLeg
+
+            # Recover the aircraft
+            aircraft = self.buildAircaft()
+            elapsedTimeSeconds = list(aircraftConfig.keys())[0]
+            state = aircraftConfig[elapsedTimeSeconds]
+            aircraft.updateAircraftStateVector(elapsedTimeSeconds,
+                                               updatedSpeed or state[1],
+                                               updatedAltitude or state[0],
+                                               state[2],
+                                               state[3],
+                                               state[4],
+                                               state[5],
+                                               state[6],
+                                               state[7],
+                                               state[8],
+                                               False)
+            aircraft.setAircraftMassKilograms(state[4])
+            aircraft.setTargetApproachWayPoint(beginOfLastTurnLeg)
+            aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
+            aircraft.aircraftCurrentConfiguration = 'cruise'
+            last = None
+
+            if configuration['previousVertex']:
+                lastVertex = configuration['previousVertex']
+                last = WayPoint(
+                    Name=lastVertex['Name'],
+                    LatitudeDegrees=lastVertex['LatitudeDegrees'],
+                    LongitudeDegrees=lastVertex['LongitudeDegrees'],
+                    AltitudeMeanSeaLevelMeters=lastVertex['AltitudeMeanSeaLevelMeters']
+                )
+            self.wayPointsDict = wayPointsDict
+            self.fixList = fixes
+            fRoute = Graph()
+            wayPoints = [wayPointsDict[f] for f in fixes]
+            distances = self.computePairwiseDistances(fixes)
+            flightLength = self.departureAirport.getDistanceMetersTo(wayPoints[0]) + sum(distances) + wayPoints[
+                -1].getDistanceMetersTo(self.arrivalAirport) + descentGlideSlopeLength
+            distanceStillToFlyMeters = flightLength - configuration['flownDistance']
+            elapsedTimeSeconds = configuration['elapsedTimeSeconds']
+            initialHeadingDegrees = configuration['initialHeadingDegrees']
+            endOfSimulation = False
+            flightIndex = startFrom
+            anticipatedTurnWayPoint = None
+
+            while (endOfSimulation == False) and (flightIndex < len(fixes) - 1):
+                endOfSimulation, anticipatedTurnWayPoint, distanceStillToFlyMeters, last, elapsedTimeSeconds, initialHeadingDegrees, route = self.flyFrom(
+                    aircraft, fixes, flightIndex, anticipatedTurnWayPoint, distanceStillToFlyMeters, last,
+                    elapsedTimeSeconds, initialHeadingDegrees
+                )
+                fRoute.addGraph(route)
+                finalRoute.addGraph(route)
+                flightIndex += 1
+
+            route = self.arrive(aircraft, initialHeadingDegrees, fRoute.getLastVertex().getWeight(), touchDownWayPoint, distanceStillToFlyMeters, flightLength)
+            fRoute.addGraph(route)
+            fRoute.createXlsxOutputFile()
+
+    def fly(self, deltaTimeSeconds=1):
+        configurations = []
+
+        constraints = []
+        fixes = self.fixList
+        aircraft = self.buildAircaft()
+        finalRoute, initialWayPoint, initialHeadingDegrees = self.depart(aircraft, fixes, deltaTimeSeconds)
+        beginOfLastTurnLeg, touchDownWayPoint, descentGlideSlopeLength = self.simulateArrival(aircraft, fixes,
+                                                                                              deltaTimeSeconds)
+
+        self.insert(position='begin', wayPoint=initialWayPoint)
+        self.insert(position='end', wayPoint=beginOfLastTurnLeg)
+        aircraft.setTargetApproachWayPoint(beginOfLastTurnLeg)
+        aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
+
+        wayPoints = [self.wayPointsDict[f] for f in self.fixList]
+        distances = self.computePairwiseDistances(self.fixList)
+        flightLength = self.departureAirport.getDistanceMetersTo(wayPoints[0]) + sum(distances) + wayPoints[
+            -1].getDistanceMetersTo(self.arrivalAirport) + descentGlideSlopeLength
+
+        anticipatedTurnWayPoint = None
+        elapsedTimeSeconds = initialWayPoint.getElapsedTimeSeconds()
+        flightIndex = 0
+        endOfSimulation = False
+        last = finalRoute.getLastVertex().getWeight()
+        distanceStillToFlyMeters = flightLength - finalRoute.getLengthMeters()
+
+        while (endOfSimulation == False) and (flightIndex < len(self.fixList)):
+            previousVertex = {
+                'Name': last.Name,
+                'LatitudeDegrees': last.LatitudeDegrees,
+                'LongitudeDegrees': last.LongitudeDegrees,
+                'AltitudeMeanSeaLevelMeters': last.AltitudeMeanSeaLevelMeters
+            } if last else None
+            anticipatedTurnWayPointObj = {
+                'Name': anticipatedTurnWayPoint.Name,
+                'LatitudeDegrees': anticipatedTurnWayPoint.LatitudeDegrees,
+                'LongitudeDegrees': anticipatedTurnWayPoint.LongitudeDegrees,
+                'AltitudeMeanSeaLevelMeters': anticipatedTurnWayPoint.AltitudeMeanSeaLevelMeters
+            } if anticipatedTurnWayPoint else None
+            configurations.append({
+                'aircraft': aircraft.StateVector.aircraftStateHistory[-1],
+                'index': flightIndex,
+                'anticipatedTurnWayPoint': anticipatedTurnWayPointObj,
+                'previousVertex': previousVertex,
+                'elapsedTimeSeconds': elapsedTimeSeconds,
+                'initialHeadingDegrees': initialHeadingDegrees,
+                'flownDistance': flightLength - distanceStillToFlyMeters
+            })
+
+            endOfSimulation, anticipatedTurnWayPoint, distanceStillToFlyMeters, last, elapsedTimeSeconds, initialHeadingDegrees, _ = self.flyFrom(
+                aircraft, self.fixList, flightIndex, anticipatedTurnWayPoint, distanceStillToFlyMeters, last,
+                elapsedTimeSeconds, initialHeadingDegrees,
+                deltaTimeSeconds=1
+            )
+
+            flightIndex += 1
+
+        with open('configurations.json', 'w') as f:
+            json.dump(configurations, f)
