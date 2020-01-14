@@ -48,6 +48,7 @@ Meter2NauticalMiles = 0.000539956803
 
 NumberOfSlopeParts = 100 # dimension less number (number of elementary legs in the slope)
 
+
 class DescentGlideSlope(Graph):
     '''
     the glide slope starts 5 Nautical miles ahead of the touch-down point
@@ -63,8 +64,8 @@ class DescentGlideSlope(Graph):
     def __init__(self, 
                  runway, 
                  aircraft, 
-                 arrivalAirport , 
-                 descentGlideSlopeDegrees = 3.0):
+                 arrivalAirport,
+                 descentGlideSlopeDegrees=3.0):
         '''
         arrival Airport provides the field elevation above sea level in meters
         '''
