@@ -182,27 +182,47 @@ class FlightPath(FlightPlan):
                    headWayPoint,
                    initialHeadingDegrees,
                    headWayPointIndex):
-        '''
+        """
         execute a turn to align true heading and then fly a great circle
-        '''
-        print(' ================== one Turn Leg for each fix in the list =============== ')
-        turnLeg = TurnLeg(initialWayPoint=tailWayPoint,
-                          finalWayPoint=headWayPoint,
-                          initialHeadingDegrees=initialHeadingDegrees,
-                          aircraft=self.aircraft,
-                          reverse=False)
+        THIS IS THE MOST IMPORTANT FUNCTION, WHICH APPLY AIRCRAFT PERFORMANCE
+        FOR FLIGHT COMPUTATION
 
-        distanceToLastFixMeters = self.computeDistanceToLastFixMeters(currentPosition=tailWayPoint,
-                                                                      fixListIndex=headWayPointIndex)
+        Args:
+            tailWayPoint:
+            headWayPoint:
+            initialHeadingDegrees:
+            headWayPointIndex:
+
+        Returns:
+            endOfSimulation, finalHeadingDegrees, finalWayPoint.getElapsedTimeSeconds(), anticipatedTurnWayPoint
+        """
+        print('================== one Turn Leg for each fix in the list =============== ')
+
+        turnLeg = TurnLeg(
+            initialWayPoint=tailWayPoint,
+            finalWayPoint=headWayPoint,
+            initialHeadingDegrees=initialHeadingDegrees,
+            aircraft=self.aircraft,
+            reverse=False
+        )
+
+        distanceToLastFixMeters = self.computeDistanceToLastFixMeters(
+            currentPosition=tailWayPoint,
+            fixListIndex=headWayPointIndex
+        )
         print(self.className + ': distance to last fix= {0} nautics'.format(
             distanceToLastFixMeters * Meter2NauticalMiles))
         distanceStillToFlyMeters = self.flightLengthMeters - self.finalRoute.getLengthMeters()
-        print(self.className + ': still to fly= {0} nautics'.format(distanceStillToFlyMeters * Meter2NauticalMiles))
+        print(self.className + ': still to fly= {0} nautics'.format(
+            distanceStillToFlyMeters * Meter2NauticalMiles
+        ))
 
-        endOfSimulation = turnLeg.buildTurnLeg(deltaTimeSeconds=self.deltaTimeSeconds,
-                                               elapsedTimeSeconds=tailWayPoint.getElapsedTimeSeconds(),
-                                               distanceStillToFlyMeters=distanceStillToFlyMeters,
-                                               distanceToLastFixMeters=distanceToLastFixMeters)
+        endOfSimulation = turnLeg.buildTurnLeg(
+            deltaTimeSeconds=self.deltaTimeSeconds,
+            elapsedTimeSeconds=tailWayPoint.getElapsedTimeSeconds(),
+            distanceStillToFlyMeters=distanceStillToFlyMeters,
+            distanceToLastFixMeters=distanceToLastFixMeters
+        )
         self.finalRoute.addGraph(turnLeg)
 
         if (endOfSimulation == False):
@@ -282,9 +302,17 @@ class FlightPath(FlightPlan):
         ''' return to caller '''
         return endOfSimulation, finalHeadingDegrees, finalWayPoint.getElapsedTimeSeconds(), anticipatedTurnWayPoint
 
-    def loopThroughFixList(self,
-                           initialHeadingDegrees,
-                           elapsedTimeSeconds):
+    def loopThroughFixList(self, initialHeadingDegrees, elapsedTimeSeconds):
+        """
+        This is the main loop of every way-points for flight computation
+
+        Args:
+            initialHeadingDegrees (float):
+            elapsedTimeSeconds (float):
+
+        Returns:
+
+        """
 
         anticipatedTurnWayPoint = None
         ''' start loop over the fix list '''

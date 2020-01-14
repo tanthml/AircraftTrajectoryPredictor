@@ -29,8 +29,7 @@ Created on 24 December 2014
 is used in case of SIMULATED arrival turn.
 
 '''
-import time
-import unittest
+
 
 class BaseTurnLeg(object):
     
@@ -65,7 +64,6 @@ class BaseTurnLeg(object):
         print(strMsg)
         
         self.turnLegList = []
-                    
         
     def build(self):
         
@@ -121,43 +119,4 @@ class BaseTurnLeg(object):
         return self.turnLegList
     
     def __str__(self):
-        return str( self.turnLegList)
-    
-
-class Test_Class(unittest.TestCase):
-
-    def test_Class(self):
-
-    
-        print("=========== Base Turn Leg testing   =========== " + time.strftime("%c"))
-        
-        baseTurnLeg = BaseTurnLeg(150.0, 190.0, 1.0)
-        baseTurnLeg.build()
-        print(baseTurnLeg)
-        
-        print("=========== Base Turn Leg testing   =========== " + time.strftime("%c"))
-    
-        baseTurnLeg = BaseTurnLeg(350.0, 10.0, 1.0)
-        baseTurnLeg.build()
-        print(baseTurnLeg)
-        
-        print("=========== Base Turn Leg testing   =========== " + time.strftime("%c"))
-        baseTurnLeg = BaseTurnLeg(10.0, 350.0, -1.0)
-        baseTurnLeg.build()
-        print(baseTurnLeg)
-        
-        print("=========== Base Turn Leg testing   =========== " + time.strftime("%c"))
-        baseTurnLeg = BaseTurnLeg(270.0, 80.0, -1.0)
-        baseTurnLeg.build()
-        print(baseTurnLeg)
-        
-        print("=========== Base Turn Leg testing   =========== " + time.strftime("%c"))
-        try:
-            BaseTurnLeg(361.0, 0.0, 0.0)
-            self.assertFalse(True)
-        except:
-            self.assertTrue(True)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        return str(self.turnLegList)

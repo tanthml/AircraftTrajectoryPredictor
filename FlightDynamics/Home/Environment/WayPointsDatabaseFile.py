@@ -117,7 +117,7 @@ class WayPointsDatabase(object):
         self.FilesFolder = os.path.dirname(__file__)
 
         print(self.className + ': file folder= {0}'.format(self.FilesFolder))
-        self.FilePath = os.path.abspath(self.FilesFolder+ os.path.sep + self.FilePath)
+        self.FilePath = os.path.abspath(self.FilesFolder + os.path.sep + self.FilePath)
         print(self.className + ': file path= {0}'.format(self.FilePath))
 
         self.WayPointsDict = {}
