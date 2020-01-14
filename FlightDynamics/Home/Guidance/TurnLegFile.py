@@ -44,12 +44,9 @@ TAS [kt] RADIUS (15° Φ) [NM] RADIUS (25° Φ) [NM]
 
 '''
 import math
-import unittest
 
 from Home.aerocalc.airspeed import cas2tas
-
 from Home.Guidance.GraphFile import Graph
-
 from Home.Guidance.BaseTurnLegFile import BaseTurnLeg
 from Home.Guidance.WayPointFile import WayPoint
 

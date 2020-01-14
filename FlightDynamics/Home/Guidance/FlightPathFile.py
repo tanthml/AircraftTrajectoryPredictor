@@ -1065,17 +1065,19 @@ class FlightPath(FlightPlan):
             aircraft = self.buildAircaft()
             elapsedTimeSeconds = list(aircraftConfig.keys())[0]
             state = aircraftConfig[elapsedTimeSeconds]
-            aircraft.updateAircraftStateVector(elapsedTimeSeconds,
-                                               updatedSpeed or state[1],
-                                               updatedAltitude or state[0],
-                                               state[2],
-                                               state[3],
-                                               state[4],
-                                               state[5],
-                                               state[6],
-                                               state[7],
-                                               state[8],
-                                               False)
+            aircraft.updateAircraftStateVector(
+                elapsedTimeSeconds=elapsedTimeSeconds,
+                trueAirSpeedMetersPerSecond=updatedSpeed or state[1],
+                altitudeMeanSeaLevelMeters=updatedAltitude or state[0],
+                currentDistanceFlownMeters=state[2],
+                distanceStillToFlyMeters=state[3],
+                aircraftMassKilograms=state[4],
+                flightPathAngleDegrees=state[5],
+                thrustNewtons=state[6],
+                dragNewtons=state[7],
+                liftNewtons=state[8],
+                endOfSimulation=False
+            )
             aircraft.setAircraftMassKilograms(state[4])
             aircraft.setTargetApproachWayPoint(beginOfLastTurnLeg)
             aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
