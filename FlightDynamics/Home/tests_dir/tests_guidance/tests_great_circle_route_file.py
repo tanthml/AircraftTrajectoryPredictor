@@ -243,6 +243,111 @@ class TestGreatCircleRoute(unittest.TestCase):
             greatCircle.createKmlOutputFile()
             greatCircle.createXlsxOutputFile()
 
+    def test_compute_great_circle(self):
+        # print(
+        #     '==================== departure airport ==================== ' + time.strftime(
+        #         "%c"))
+        # airportsDB = AirportsDatabase()
+        # assert (airportsDB.read())
+        #
+        # CharlesDeGaulle = airportsDB.getAirportFromICAOCode('LFPG')
+        # print(CharlesDeGaulle)
+        #
+        # print(
+        #     '==================== arrival airport ==================== ' + time.strftime(
+        #         "%c"))
+        #
+        # MarseilleMarignane = airportsDB.getAirportFromICAOCode('LFML')
+        # print(MarseilleMarignane)
+
+        wayPointsDb = WayPointsDatabase()
+        assert (wayPointsDb.read())
+        Exona = wayPointsDb.getWayPoint('EXONA')
+        Rosal = wayPointsDb.getWayPoint('ROSAL')
+        Santa = wayPointsDb.getWayPoint('SANTA')
+
+
+        print(
+            '==================== Great Circle ==================== ' + time.strftime(
+                "%c"))
+
+        self.aircraft.setCurrentAltitudeSeaLevelMeters(
+            elapsedTimeSeconds=0.0,
+            altitudeMeanSeaLevelMeters=0.0,
+            lastAltitudeMeanSeaLevelMeters=0.0,
+            targetCruiseAltitudeMslMeters=10000.0)
+
+        self.aircraft.initStateVector(
+            elapsedTimeSeconds=0.0,
+            trueAirSpeedMetersSecond=70.0,
+            airportFieldElevationAboveSeaLevelMeters=152.0)
+
+        self.aircraft.setTargetCruiseFlightLevel(
+            RequestedFlightLevel=310,
+            departureAirportAltitudeMSLmeters=152.0
+        )
+
+        print(
+            '==================== runways database ==================== ' + time.strftime(
+                "%c"))
+        # runWaysDatabase = RunWayDataBase()
+        # assert runWaysDatabase.read()
+        # arrivalRunway = runWaysDatabase.getFilteredRunWays(
+        #     airportICAOcode='LFML', runwayName='')
+
+        print(
+            '==================== Compute touch down ==================== ' + time.strftime(
+                "%c"))
+
+        # arrivalGroundRun = GroundRunLeg(runway=arrivalRunway,
+        #                                 aircraft=self.aircraft,
+        #                                 airport=MarseilleMarignane)
+        # touchDownWayPoint = arrivalGroundRun.computeTouchDownWayPoint()
+        # self.aircraft.setArrivalRunwayTouchDownWayPoint(touchDownWayPoint)
+
+        print(
+            "=========== simulated descent glide slope  =========== " + time.strftime(
+                "%c"))
+
+        # threeDegreesGlideSlope = DescentGlideSlope(runway=arrivalRunway,
+        #                                            aircraft=self.aircraft,
+        #                                            arrivalAirport=MarseilleMarignane)
+        # threeDegreesGlideSlope.buildSimulatedGlideSlope(
+        #     descentGlideSlopeSizeNautics=5.0)
+        # approachWayPoint = threeDegreesGlideSlope.getLastVertex().getWeight()
+        # self.aircraft.setTargetApproachWayPoint(approachWayPoint)
+
+        print(
+            '==================== Great Circle ==================== ' + time.strftime(
+                "%c"))
+
+        greatCircle = GreatCircleRoute(initialWayPoint=Exona,
+                                       finalWayPoint=Rosal,
+                                       aircraft=self.aircraft)
+
+        distanceStillToFlyMeters = Exona.getDistanceMetersTo(Rosal)
+        greatCircle.computeGreatCircle(deltaTimeSeconds=1.0,
+                                       elapsedTimeSeconds=0.0,
+                                       distanceStillToFlyMeters=distanceStillToFlyMeters,
+                                       distanceToLastFixMeters=distanceStillToFlyMeters)
+
+        greatCircle2 = GreatCircleRoute(initialWayPoint=Rosal,
+                                       finalWayPoint=Santa,
+                                       aircraft=self.aircraft)
+
+        distanceStillToFlyMeters = Rosal.getDistanceMetersTo(Santa)
+        greatCircle2.computeGreatCircle(deltaTimeSeconds=1.0,
+                                       elapsedTimeSeconds=0.0,
+                                       distanceStillToFlyMeters=distanceStillToFlyMeters,
+                                       distanceToLastFixMeters=distanceStillToFlyMeters)
+        
+        greatCircle.addVertex(greatCircle2)
+        print('main great circle length= ' + str(
+            greatCircle.computeLengthMeters()) + ' meters')
+
+        greatCircle.createKmlOutputFile()
+        greatCircle.createXlsxOutputFile()
+
 
 if __name__ == '__main__':
     unittest.main()

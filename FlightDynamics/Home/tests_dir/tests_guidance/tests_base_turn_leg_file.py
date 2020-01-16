@@ -95,6 +95,14 @@ class TestBaseTurnLeg(unittest.TestCase):
             print(" except")
             self.assertTrue(True)
 
+    def test_turn_leg(self):
+        print(
+            "=========== Base Turn Leg testing   =========== " + time.strftime(
+                "%c"))
+        baseTurnLeg = BaseTurnLeg(22.0, 87.0, -3.0)
+        ret = baseTurnLeg.build()
+        print(baseTurnLeg)
+
 
 if __name__ == '__main__':
     unittest.main()
