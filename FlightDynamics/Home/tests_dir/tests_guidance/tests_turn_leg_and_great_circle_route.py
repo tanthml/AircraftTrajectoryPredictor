@@ -61,20 +61,15 @@ class TestTurnLegGreatCircleRoute(unittest.TestCase):
         # print(p4)
 
         self.aircraft.aircraftCurrentConfiguration = 'cruise'
-        self.aircraft.setCurrentAltitudeSeaLevelMeters(
-            elapsedTimeSeconds=0.0,
-            altitudeMeanSeaLevelMeters=10000.0,
-            lastAltitudeMeanSeaLevelMeters=10000.0,
-            targetCruiseAltitudeMslMeters=10000.0)
 
         self.aircraft.initStateVector(
             elapsedTimeSeconds=0.0,
             trueAirSpeedMetersSecond=70.0,
-            airportFieldElevationAboveSeaLevelMeters=152.0)
+            airportFieldElevationAboveSeaLevelMeters=10000.0)
 
         self.aircraft.setTargetCruiseFlightLevel(
             RequestedFlightLevel=310,
-            departureAirportAltitudeMSLmeters=10000.0
+            departureAirportAltitudeMSLmeters=0.0
         )
 
         greatCircle = GreatCircleRoute(
@@ -85,7 +80,7 @@ class TestTurnLegGreatCircleRoute(unittest.TestCase):
 
         distanceStillToFlyMeters = p1.getDistanceMetersTo(p2)
         greatCircle.computeGreatCircle(
-            deltaTimeSeconds=1.0,
+            deltaTimeSeconds=self.deltaTimeSeconds,
             elapsedTimeSeconds=p1.getElapsedTimeSeconds(),
             distanceStillToFlyMeters=distanceStillToFlyMeters,
             distanceToLastFixMeters=distanceStillToFlyMeters
@@ -99,10 +94,11 @@ class TestTurnLegGreatCircleRoute(unittest.TestCase):
                               aircraft=self.aircraft,
                               reverse=False)
 
-        distance_to_fly = p2.getDistanceMetersTo(p3)
+        last_gc_vertex = finalRoute.getLastVertex().getWeight()
+        distance_to_fly = last_gc_vertex.getDistanceMetersTo(p3)
         turn_leg.buildTurnLeg(
             deltaTimeSeconds=self.deltaTimeSeconds,
-            elapsedTimeSeconds=p2.getElapsedTimeSeconds(),
+            elapsedTimeSeconds=last_gc_vertex.getElapsedTimeSeconds(),
             distanceStillToFlyMeters=distance_to_fly,
             distanceToLastFixMeters=distance_to_fly
         )
@@ -118,19 +114,40 @@ class TestTurnLegGreatCircleRoute(unittest.TestCase):
         distanceStillToFlyMeters = last_turn_leg_vertex.getDistanceMetersTo(p3)
         greatCircle2.computeGreatCircle(
             deltaTimeSeconds=self.deltaTimeSeconds,
-            elapsedTimeSeconds=0.0,
+            elapsedTimeSeconds=last_turn_leg_vertex.getElapsedTimeSeconds(),
             distanceStillToFlyMeters=distanceStillToFlyMeters,
             distanceToLastFixMeters=distanceStillToFlyMeters
         )
         finalRoute.addGraph(greatCircle2)
 
-        # turn_leg.addGraph(greatCircle2)
-        # turn_leg.createKmlOutputFile()
-        # turn_leg.createXlsxOutputFile()
-
-
         finalRoute.createKmlOutputFile()
         finalRoute.createXlsxOutputFile()
+        self.aircraft.createStateVectorOutputFile(filePrefix='turn-leg-great-circle')
+
+        # export aircraft state history
+        # import pandas as pd
+        # data = self.aircraft.StateVector.aircraftStateHistory
+        # std_output = []
+        # for dt in data:
+        #     key = list(dt.keys())[0]
+        #     print(key)
+        #     std_output.append(dt[key])
+        #     # exit(0)
+        #
+        # headers = [
+        #     'altitudeMeanSeaLevelMeters',
+        #     'trueAirSpeedMetersPerSecond',
+        #     'totalDistanceFlownMeters',
+        #     'distanceStillToFlyMeters',
+        #     'aircraftMassKilograms',
+        #     'flightPathAngleDegrees',
+        #     'thrustNewtons',
+        #     'dragNewtons',
+        #     'liftNewtons'
+        # ]
+        # df = pd.DataFrame(std_output, columns=headers)
+        # print(df.head())
+        # df.to_csv("aircraft_state_history.csv")
 
 
 if __name__ == '__main__':
